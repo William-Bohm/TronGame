@@ -1,12 +1,13 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from "./App";
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import {TronProvider} from "./context/GameContext";
 
-const root = createRoot(document.getElementById('root') as HTMLElement);
-
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
-    <React.StrictMode>
+  <React.StrictMode>
+      <TronProvider>
         <App />
-    </React.StrictMode>
+      </TronProvider>
+  </React.StrictMode>
 );
-
