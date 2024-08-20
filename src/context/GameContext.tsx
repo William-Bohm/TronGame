@@ -255,63 +255,118 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     }
   };
 
-const getMoveSuggestion = async (playerId: number): Promise<string> => {
-    const prepareModelInput = (currentPlayer: Player): Float32Array => {
-      // Create a copy of the game grid
-      const gridCopy = gameGrid.map(row => [...row]);
+const getMoveSuggestion = async (playerId: number): Promise<Direction> => {
+  const prepareModelInput = (currentPlayer: Player): Float32Array => {
+  // Create a copy of the game grid
+  const gridCopy = gameGrid.map(row => [...row]);
 
-      // Mark the current player's position
-      const [currentX, currentY] = currentPlayer.position;
-      gridCopy[currentY][currentX] = currentPlayer.id;
+  // Mark the current player's position
+  const [currentX, currentY] = currentPlayer.position;
 
-      // Flatten the grid
-      const flatGrid = gridCopy.flat();
+  // Check if the current position is within bounds
+  if (currentY >= 0 && currentY < gridSize.height && currentX >= 0 && currentX < gridSize.width) {
+    gridCopy[currentY][currentX] = currentPlayer.id;
+  }
 
-      // Create arrays for current player and other players
-      const currentPlayerPosition = new Array(gridSize.height * gridSize.width).fill(0);
-      const otherPlayersPosition = new Array(gridSize.height * gridSize.width).fill(0);
+  // Flatten the grid
+  const flatGrid = gridCopy.flat();
 
-      // Mark player positions
-      players.forEach(p => {
-        const [x, y] = p.position;
-        const index = y * gridSize.width + x;
-        if (p.id === currentPlayer.id) {
-          currentPlayerPosition[index] = 1;
-        } else {
-          otherPlayersPosition[index] = 1;
-        }
-      });
+  // Create arrays for current player and other players
+  const currentPlayerPosition = new Array(gridSize.height * gridSize.width).fill(0);
+  const otherPlayersPosition = new Array(gridSize.height * gridSize.width).fill(0);
 
-      // console.log('currentPlayerPosition:', currentPlayerPosition);
-      // console.log('otherPlayersPosition:', otherPlayersPosition);
-      // console.log('flatGrid:', flatGrid);
-
-      // Combine all information into a single Float32Array
-      return new Float32Array([...flatGrid, ...currentPlayerPosition, ...otherPlayersPosition]);
-    };
-
-    const moveDecision = (outputValue: number): Direction => {
-      console.log('Model output:', outputValue);
-      if (outputValue > 0.1) return 'right';
-      if (outputValue > 0) return 'down';
-      if (outputValue > -0.1) return 'left';
-      return 'up';
-    };
-
-    if (!modelInitialized) {
-      throw new Error('Model not initialized. Please call initializeAIModel() first.');
+  // Mark player positions
+  players.forEach(p => {
+    const [x, y] = p.position;
+    const index = y * gridSize.width + x;
+    if (x >= 0 && x < gridSize.width && y >= 0 && y < gridSize.height) {
+      if (p.id === currentPlayer.id) {
+        currentPlayerPosition[index] = 1;
+      } else {
+        otherPlayersPosition[index] = 1;
+      }
     }
+  });
 
-    const player = players.find(p => p.id === playerId);
-    if (!player || player.type !== 'bot') {
-      throw new Error('Invalid player or not a bot');
-    }
+  // Combine all information into a single Float32Array
+  return new Float32Array([...flatGrid, ...currentPlayerPosition, ...otherPlayersPosition]);
+};
 
-    const input = prepareModelInput(player);
-    const modelOutput = await getModelMoveSuggestion(input, [1, 3, gridSize.height, gridSize.width]);
+  const simulateMove = (player: Player, direction: Direction): Player => {
+  let [x, y] = player.position;
 
-    return moveDecision(modelOutput);
+  switch (direction) {
+    case 'up':
+      y -= 1;
+      break;
+    case 'down':
+      y += 1;
+      break;
+    case 'left':
+      x -= 1;
+      break;
+    case 'right':
+      x += 1;
+      break;
+  }
+
+  // If the move is out of bounds, you can either set it as a losing move or handle it differently
+  const isOutOfBounds = x < 0 || x >= gridSize.width || y < 0 || y >= gridSize.height;
+
+  return {
+    ...player,
+    position: isOutOfBounds ? player.position : [x, y],
+    direction,
   };
+};
+
+  const moveDecision = (outputs: number[], possibleMoves: Direction[]): Direction => {
+    // Handle the decision logic here, possibly giving a very low score to out-of-bounds moves
+    const maxOutputIndex = outputs.indexOf(Math.max(...outputs));
+    return possibleMoves[maxOutputIndex];
+  };
+
+
+  if (!modelInitialized) {
+    throw new Error('Model not initialized. Please call initializeAIModel() first.');
+  }
+
+  const player = players.find(p => p.id === playerId);
+  if (!player || player.type !== 'bot') {
+    throw new Error('Invalid player or not a bot');
+  }
+
+  const { direction } = player;
+  let possibleDirections: Direction[] = [];
+
+  // Determine the possible moves based on the current direction
+  switch (direction) {
+    case 'up':
+      possibleDirections = ['left', 'right', 'up'];
+      break;
+    case 'down':
+      possibleDirections = ['left', 'right', 'down'];
+      break;
+    case 'left':
+      possibleDirections = ['up', 'down', 'left'];
+      break;
+    case 'right':
+      possibleDirections = ['up', 'down', 'right'];
+      break;
+  }
+
+  const modelOutputs: number[] = [];
+
+  for (const dir of possibleDirections) {
+    const simulatedPlayer = simulateMove(player, dir);
+    const input = prepareModelInput(simulatedPlayer);
+    const modelOutput = await getModelMoveSuggestion(input, [1, 3, gridSize.height, gridSize.width]);
+    modelOutputs.push(modelOutput);
+  }
+
+  return moveDecision(modelOutputs, possibleDirections);
+};
+
   const isGameOver = (newPlayers: Player[]): { gameOver: boolean; winner: number | null } => {
     const alivePlayers = newPlayers.filter(player => player.alive);
 
