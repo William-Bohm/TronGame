@@ -1,9 +1,106 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import GameBoard from './GameBoard';
-import PlayerManager from './PlayerManager';
+import GameBoard from './components/GameBoard';
+import PlayerManager from './components/PlayerManager';
 import {useTronContext} from "./context/GameContext";
+import {ThemeProvider} from "styled-components";
+import {darkTheme, lightTheme} from "./theme";
+import GlobalStyles from './GlobalStyles';
+import NeonLogo from "./components/NeonLogo";
+import GameSpeedSlider from "./components/GameSpeedSlider";
+import BoardSizeSelector from "./components/BoardSizeSelector";
+import styled from 'styled-components';
+
+const TopRowWrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  
+  @media (max-width: 900px) {
+    justify-content: center;
+  }
+  
+  @media (max-width: 800px) {
+    flex-direction: column;
+    align-items: center;
+  }
+`;
+
+const LogoWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+    margin-left: 40px;
+`;
+
+const ControlsWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 70px; /* Space between the slider and board size selector */
+      max-width: 800px;
+    margin-right: 40px;
+
+  @media (max-width: 900px) {
+    justify-content: center;
+    width: 100%;
+  }
+
+  @media (max-width: 800px) {
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    
+    & > * {
+      width: 100%; /* Make child elements take full width */
+      max-width: 400px; /* Optional: set a max-width for each control */
+    }
+  }
+`;
+
+const MainContent = styled.div`
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const PlayerManagerWrapper = styled.div`
+  max-width: 500px;
+  width: 20%;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 300px;
+  }
+`;
+
+const GameBoardWrapper = styled.div`
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+
+const AppContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+`;
+
+
 
 const App: React.FC = () => {
+
 
  const {
     players,
@@ -105,60 +202,36 @@ desiredDirections
     }, [handleKeyPress]);
 
 
+    const [isDarkMode, setIsDarkMode] = useState(true);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
 
   return (
-      <div tabIndex={0}>
-          <h1>Tron Game</h1>
-          {/*player manager*/}
-          <PlayerManager/>
-          {/*game speed*/}
-          <div>
-              <label>
-                  Game Speed:
-                  <input
-                      type="range"
-                      min="100"
-                      max="1000"
-                      step="100"
-                      value={gameSpeed}
-                      onChange={(e) => setGameSpeed(Number(e.target.value))}
-                  />
-                  {gameSpeed}ms
-              </label>
-          </div>
-          {/*board size*/}
-          <div>
-              <label>
-                  Grid Width:
-                  <input
-                      type="number"
-                      value={newWidth}
-                      onChange={(e) => setNewWidth(Number(e.target.value))}
-                      min="5"
-                      max="50"
-                  />
-              </label>
-              <label>
-                  Grid Height:
-                  <input
-                      type="number"
-                      value={newHeight}
-                      onChange={(e) => setNewHeight(Number(e.target.value))}
-                      min="5"
-                      max="50"
-                  />
-              </label>
-              <button onClick={handleGridSizeUpdate} disabled={gameStatus === 'playing'}>
-                  Update Grid Size
-              </button>
-          </div>
-          {/*start game*/}
-          <button onClick={startGame} disabled={!modelInitialized || gameStatus === 'playing'}>
-              {gameStatus === 'playing' ? 'Game in Progress' : 'Start Game'}
-          </button>
-          {/*game board*/}
-          <GameBoard/>
-      </div>
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+      <AppContainer>
+        <GlobalStyles />
+        <TopRowWrapper>
+          <LogoWrapper>
+            <NeonLogo />
+          </LogoWrapper>
+          <ControlsWrapper>
+            <GameSpeedSlider gameSpeed={gameSpeed} setGameSpeed={setGameSpeed} />
+            <BoardSizeSelector />
+          </ControlsWrapper>
+        </TopRowWrapper>
+        <MainContent>
+          <PlayerManagerWrapper>
+            <PlayerManager />
+          </PlayerManagerWrapper>
+          <GameBoardWrapper>
+            <GameBoard />
+          </GameBoardWrapper>
+        </MainContent>
+      </AppContainer>
+    </ThemeProvider>
   );
 };
 
