@@ -1,41 +1,34 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import {useTronContext} from "../context/GameContext";
+import {useTronContext} from "../../context/GameContext";
 
 const SelectorWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin: 20px 0;
+  width: 100%;
+  align-items: start;
   font-family: 'Orbitron', sans-serif;
   color: ${({ theme }) => theme.colors.primary};
 `;
 
 const Label = styled.label`
   font-size: 1.5rem;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   color: ${({ theme }) => theme.colors.primary};
-  text-shadow: 
-    0 0 5px ${({ theme }) => theme.colors.primary},
-    0 0 10px ${({ theme }) => theme.colors.primary},
-    0 0 20px ${({ theme }) => theme.colors.primary};
+
 `;
 
 const Dropdown = styled.select`
-  width: 200px;
+  width: 100%;
   padding: 10px;
   font-size: 1.2rem;
   border: 2px solid ${({ theme }) => theme.colors.primary};
   background: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.primary};
-  text-shadow: 
-    0 0 5px ${({ theme }) => theme.colors.primary},
-    0 0 10px ${({ theme }) => theme.colors.primary};
   border-radius: 10px;
   margin-bottom: 20px;
   outline: none;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
 
   &:hover {
     box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};

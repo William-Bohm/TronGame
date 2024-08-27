@@ -16,13 +16,13 @@ const PlayerManagerWrapper = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 20px;
+  padding-left: 20px;
   font-family: 'Orbitron', sans-serif;
   color: ${({ theme }) => theme.colors.primary};
 `;
 
 const PlayerManagerHeader = styled.h2`
-  margin: 20px 0;
+  margin-bottom: 0px;
 `;
 
 const PlayerCardsOuterWrapper = styled.div`
@@ -48,21 +48,24 @@ const PlayerCardsWrapper = styled.div`
 const PlayerCard = styled.div`
   background: ${({ theme }) => theme.colors.background};
   border: 2px solid ${({ theme }) => theme.colors.primary};
-  box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
   border-radius: 10px;
   padding: 15px;
   margin: 10px 0;
-  min-height: 150px;
+  //min-height: 150px;
   text-align: center;
   position: relative;
+  
+  &:hover {
+      box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
+  }
 
   h3 {
-    margin: 10px 0;
+    margin: 0 0;
     color: ${({ theme }) => theme.colors.primary};
   }
 
   p {
-    margin: 5px 0;
+    margin: 0 0;
     color: ${({ theme }) => theme.colors.primary};
   }
 
@@ -77,12 +80,10 @@ const PlayerCard = styled.div`
 `;
 
 const TrashIcon = styled(FaTrashAlt)`
-  position: absolute;
-  top: 10px;
-  right: 10px;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.primary};
-  transition: color 0.3s ease;
+  transition: color 0.1s ease;
+  margin-left: 10px;
 
   &:hover {
     color: ${({ theme }) => theme.colors.secondary};
@@ -128,6 +129,7 @@ const AddPlayerButton = styled.button`
   box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
   border-radius: 10px;
   padding: 10px 20px;
+  margin-bottom: 20px;
   font-size: 1.2rem;
   cursor: pointer;
   transition: background 0.3s ease-in-out;
@@ -138,6 +140,12 @@ const AddPlayerButton = styled.button`
     box-shadow: 0 0 15px ${({ theme }) => theme.colors.secondary};
   }
 `;
+
+const TopRow = styled.div`
+  display: flex;
+  align-items: center;
+    justify-content: space-between;
+`
 
 const PlayerManager: React.FC = () => {
   const {
@@ -153,11 +161,7 @@ const PlayerManager: React.FC = () => {
   } = useTronContext();
   const [newPlayer, setNewPlayer] = useState<Partial<Player>>({});
 
-  const initPlayer = () => {
-    /*
-    * TODO:
-    * add direction logic.
-    * **/
+  const addPlayer = () => {
     if (gameStatus !== 'playing') {
       let type = 'human';
       let controlScheme = getUserControlScheme();
@@ -171,7 +175,7 @@ const PlayerManager: React.FC = () => {
         id: nextID,
         type: type,
         position: [0, 0] as Position,
-        name: type + ' ' + (players.length + 1),
+        name: 'player' + ' ' + (players.length + 1),
         score: 0,
         direction: 'right',
         controlScheme: getUserControlScheme(),
@@ -183,10 +187,45 @@ const PlayerManager: React.FC = () => {
       setPlayers([...newPlayers]);
       setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
       setNewPlayer({});
-
-      console.log(players);
     }
   };
+
+    const updatePlayer = (id: number, field: keyof Player, value: any) => {
+      if (gameStatus !== 'playing') {
+        if (field === 'controlScheme') {
+          const player = players.find(player => player.id === id);
+          setAvailableControlSchemes([...availableControlSchemes, players.find(player => player.id === id)?.controlScheme as ControlScheme]);
+          if (value === 'bot') {
+            console.log('set player to bot now')
+            setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'bot'} : p));
+          } else if (player?.type === 'bot' && value !== 'bot')
+            setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'human'} : p));
+        } else {
+          setPlayers(players.map(p => p.id === id ? {...p, [field]: value} : p));
+        }
+
+      }
+  };
+
+
+    const removePlayer = (id: number) => {
+      try{
+        if (gameStatus !== 'playing') {
+          let newPlayers = players.filter(player => player.id !== id);
+          newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
+          const controlScheme = players.find(player => player.id === id)?.controlScheme;
+          setPlayers([...newPlayers]);
+
+          if (controlScheme !== 'bot') {
+            setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
+          }
+        }
+      } catch (e) {
+        console.log('error baby')
+        console.log(e)
+      }
+  };
+
 
   function getUserControlScheme(): ControlScheme {
     const usedSchemes = players.map(player => player.controlScheme);
@@ -247,18 +286,6 @@ const PlayerManager: React.FC = () => {
     return randomBrightColor();
   }
 
-  const removePlayer = (id: number) => {
-      if (gameStatus !== 'playing') {
-        setPlayers(players.filter(p => p.id !== id));
-      }
-  };
-
-  const updatePlayer = (id: number, field: keyof Player, value: any) => {
-      if (gameStatus !== 'playing') {
-        setPlayers(players.map(p => p.id === id ? {...p, [field]: value} : p));
-      }
-  };
-
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollPlayers = (direction: 'up' | 'down') => {
@@ -275,52 +302,85 @@ const PlayerManager: React.FC = () => {
     <PlayerManagerWrapper>
       <PlayerManagerHeader>Players</PlayerManagerHeader>
       <PlayerCardsOuterWrapper>
-        {players.length > 3 && (
+        {players.length > 2 && (
           <ArrowButton direction="up" onClick={() => scrollPlayers('up')}>
             <MdKeyboardArrowUp />
           </ArrowButton>
         )}
         <PlayerCardsWrapper ref={scrollRef}>
+          <div style={{height: 10}}></div>
           {players.map(player => (
-            <PlayerCard key={player.id}>
-              <h3>{player.name}</h3>
-              <p>Score: {player.score}</p>
-              <p>Color:
-                <input
-                  type="color"
-                  value={player.color}
-                  onChange={(e) => updatePlayer(player.id, 'color', e.target.value)}
-                />
-              </p>
-              {player.type === 'human' && (
-                <p>Control Scheme:
-                  <select
-                    value={player.controlScheme}
-                    onChange={(e) => updatePlayer(player.id, 'controlScheme', e.target.value as ControlScheme)}
-                  >
-                    {allControlSchemes.map(scheme => (
-                      <option
-                        key={scheme}
-                        value={scheme}
-                        disabled={!availableControlSchemes.includes(scheme)}
-                      >
-                        {scheme}
-                      </option>
-                    ))}
-                  </select>
-                </p>
-              )}
-              <TrashIcon onClick={() => removePlayer(player.id)} />
-            </PlayerCard>
+
+            //   player card
+              <div
+              style={{
+                display: "flex",
+                flexDirection: 'row',
+                justifyContent: "space-evenly",
+                alignItems: "center",
+              }}
+              >
+                <div style={{ flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 0 }}>
+                <PlayerCard key={player.id}>
+                  {/*top row*/}
+                  <TopRow>
+                    {/*left*/}
+                    <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'right',
+                        }}
+                    >
+                      {/*color*/}
+                      <input
+                          type="color"
+                          value={player.color}
+                          onChange={(e) => updatePlayer(player.id, 'color', e.target.value)}
+                      />
+                      <div style={{width: 10}}></div>
+
+                      {/*name*/}
+                      <h3>{player.name}</h3>
+                      <div style={{width: 10}}></div>
+
+                    </div>
+
+                    {/*right*/}
+                    <div style={{display: 'flex', flexDirection: 'column'}}>
+                      <p>Score: {player.score}</p>
+                      {/*  controls*/}
+                        <select
+                            value={player.controlScheme}
+                            onChange={(e) => updatePlayer(player.id, 'controlScheme', e.target.value as ControlScheme)}
+                        >
+                          {allControlSchemes.map(scheme => (
+                              <option
+                                  key={scheme}
+                                  value={scheme}
+                                  disabled={!availableControlSchemes.includes(scheme)}
+                              >
+                                {scheme}
+                              </option>
+                          ))}
+                        </select>
+                    </div>
+                  </TopRow>
+
+                </PlayerCard>
+                  </div>
+                <TrashIcon onClick={() => removePlayer(player.id)}/>
+              </div>
           ))}
+
         </PlayerCardsWrapper>
-        {players.length > 3 && (
+        {players.length > 2 && (
           <ArrowButton direction="down" onClick={() => scrollPlayers('down')}>
             <MdKeyboardArrowDown />
           </ArrowButton>
         )}
       </PlayerCardsOuterWrapper>
-      <AddPlayerButton onClick={initPlayer}>
+      <AddPlayerButton onClick={addPlayer}>
         Add New Player
       </AddPlayerButton>
     </PlayerManagerWrapper>

@@ -6,9 +6,10 @@ import {ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "./theme";
 import GlobalStyles from './GlobalStyles';
 import NeonLogo from "./components/NeonLogo";
-import GameSpeedSlider from "./components/GameSpeedSlider";
-import BoardSizeSelector from "./components/BoardSizeSelector";
+import GameSpeedSlider from "./components/ControllerComponents/GameSpeedSlider";
+import BoardSizeSelector from "./components/ControllerComponents/BoardSizeSelector";
 import styled from 'styled-components';
+import Controls from "./components/Controls";
 
 const TopRowWrapper = styled.div`
   display: flex;
@@ -27,37 +28,12 @@ const TopRowWrapper = styled.div`
   }
 `;
 
-const LogoWrapper = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: flex-start;
-    margin-left: 40px;
-`;
 
 const ControlsWrapper = styled.div`
-  flex: 1;
   display: flex;
-  justify-content: flex-end;
-  gap: 70px; /* Space between the slider and board size selector */
-      max-width: 800px;
-    margin-right: 40px;
-
-  @media (max-width: 900px) {
-    justify-content: center;
-    width: 100%;
-  }
-
-  @media (max-width: 800px) {
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    
-    & > * {
-      width: 100%; /* Make child elements take full width */
-      max-width: 400px; /* Optional: set a max-width for each control */
-    }
-  }
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
 `;
 
 const MainContent = styled.div`
@@ -69,20 +45,29 @@ const MainContent = styled.div`
     flex-direction: column;
   }
 `;
-
-const PlayerManagerWrapper = styled.div`
-  max-width: 500px;
-  width: 20%;
-  overflow-y: auto;
+const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 500px; // Adjust this value as needed
+  height: 100%;
+  overflow: visible; // Add this line to allow overflow
 
   @media (max-width: 768px) {
     width: 100%;
+    height: auto;
+  }
+`;
+const PlayerManagerWrapper = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  
+  @media (max-width: 768px) {
     height: 300px;
   }
 `;
 
 const GameBoardWrapper = styled.div`
-  flex: 1;
+  flex: 5;
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -209,30 +194,27 @@ desiredDirections
   };
 
 
-  return (
-    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-      <AppContainer>
-        <GlobalStyles />
-        <TopRowWrapper>
-          <LogoWrapper>
-            <NeonLogo />
-          </LogoWrapper>
+return (
+  <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+    <AppContainer>
+      <GlobalStyles />
+      <MainContent>
+        <LeftColumn>
+          <NeonLogo />
           <ControlsWrapper>
-            <GameSpeedSlider gameSpeed={gameSpeed} setGameSpeed={setGameSpeed} />
-            <BoardSizeSelector />
+            <Controls />
           </ControlsWrapper>
-        </TopRowWrapper>
-        <MainContent>
           <PlayerManagerWrapper>
             <PlayerManager />
           </PlayerManagerWrapper>
-          <GameBoardWrapper>
-            <GameBoard />
-          </GameBoardWrapper>
-        </MainContent>
-      </AppContainer>
-    </ThemeProvider>
-  );
+        </LeftColumn>
+        <GameBoardWrapper>
+          <GameBoard />
+        </GameBoardWrapper>
+      </MainContent>
+    </AppContainer>
+  </ThemeProvider>
+);
 };
 
 export default App;

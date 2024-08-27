@@ -17,7 +17,7 @@ const GameBoardContainer = styled.div`
 const CanvasContainer = styled.div`
   position: relative;
   width: 100%;
-  height: calc(100% - 60px); // Subtract space for button and padding
+  height: calc(100% - 70px); // Subtract space for button and padding
   display: flex;
   justify-content: center;
   align-items: center;
@@ -34,23 +34,22 @@ const StyledCanvas = styled.canvas`
 `;
 
 const StartButton = styled.button`
-  width: 100%;
-  max-width: 800px; // or any other suitable max-width
+  //width: 100%;
   margin-top: 20px;
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.background};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.primary};
   border: 2px solid ${({ theme }) => theme.colors.primary};
   box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
   border-radius: 10px;
   padding: 10px 20px;
   font-size: 1.2rem;
   cursor: pointer;
-  transition: background 0.3s ease-in-out;
+  transition: background 0.2s ease-in-out;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.secondary};
-    color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 0 0 15px ${({ theme }) => theme.colors.secondary};
+    background: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.background};
+    box-shadow: 0 0 15px ${({ theme }) => theme.colors.primary};
   }
 
   &:disabled {
@@ -71,23 +70,34 @@ const GameBoard: React.FC = () => {
     modelInitialized
   } = useTronContext();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [cellSize, setCellSize] = useState(0);
+    const [canvasWidth, setCanvasWidth] = useState(0);
 
   useEffect(() => {
-    const calculateCellSize = () => {
-      const viewWidth = window.innerWidth;
-      const viewHeight = window.innerHeight;
-      const maxGridWidth = viewWidth * 0.8;
-      const maxGridHeight = viewHeight * 0.8;
+    if (canvasRef.current) {
+      console.log(canvasRef.current?.width ?? 0);
+      setCanvasWidth(canvasRef.current?.width ?? 0);
+    }
+  }, []);
 
-      const cellWidthSize = Math.floor(maxGridWidth / gridSize.width);
-      const cellHeightSize = Math.floor(maxGridHeight / gridSize.height);
+  const [boardWidth, setBoardWidth] = useState(0);
+  const [cellSize, setCellSize] = useState(0);
 
-      return Math.min(cellWidthSize, cellHeightSize);
-    };
+  const calculateBoardSize = () => {
+    const maxWidth = Math.min(window.innerWidth * (3/5)); // 90% of window width, max 800px
+    const maxHeight = Math.min(window.innerHeight * (3/5)); // 90% of window width, max 800px
+    const cellSize = Math.floor(maxWidth / gridSize.width);
+    const actualWidth = cellSize * gridSize.width;
+    return { boardWidth: actualWidth, cellSize };
+  };
 
+  useEffect(() => {
     const handleResize = () => {
-      setCellSize(calculateCellSize());
+      const { boardWidth, cellSize } = calculateBoardSize();
+      console.log(boardWidth)
+      console.log(cellSize)
+
+      setBoardWidth(boardWidth);
+      setCellSize(cellSize);
     };
 
     handleResize(); // Initial calculation
@@ -102,8 +112,8 @@ const GameBoard: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas || cellSize === 0) return;
 
-    canvas.width = gridSize.width * cellSize;
-    canvas.height = gridSize.height * cellSize;
+    canvas.width = boardWidth;
+    canvas.height = cellSize * gridSize.height;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -158,22 +168,22 @@ const GameBoard: React.FC = () => {
       ctx.stroke();
       ctx.shadowBlur = 0; // Reset shadowBlur after drawing the stroke
     });
-  }, [gameGrid, players, gridSize, cellSize]);
+  }, [gameGrid, players, gridSize, cellSize, boardWidth]);
 
-return (
-  <GameBoardContainer>
-    <CanvasContainer>
-      <StyledCanvas ref={canvasRef} />
-    </CanvasContainer>
-    <StartButton
-      onClick={startGame}
-      disabled={!modelInitialized || gameStatus === 'playing'}
-      style={{ width: canvasRef.current ? `${canvasRef.current?.width}px` : '100%' }}
-    >
-      {gameStatus === 'playing' ? 'Game in Progress' : 'Start Game'}
-    </StartButton>
-  </GameBoardContainer>
-);
+  return (
+    <GameBoardContainer>
+      <CanvasContainer >
+        <StyledCanvas ref={canvasRef} />
+      </CanvasContainer>
+      <StartButton
+        onClick={startGame}
+        disabled={!modelInitialized || gameStatus === 'playing'}
+        style={{ width: `${canvasWidth}px` }}
+      >
+        {gameStatus === 'playing' ? 'Game in Progress' : 'Start Game'}
+      </StartButton>
+    </GameBoardContainer>
+  );
 };
 
 export default GameBoard;
