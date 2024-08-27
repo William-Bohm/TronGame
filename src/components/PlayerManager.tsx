@@ -156,13 +156,15 @@ const PlayerManager: React.FC = () => {
       availableControlSchemes,
       setAvailableControlSchemes,
       allControlSchemes,
-      calculatePlayerStartPositions
-
+      calculatePlayerStartPositions,
+      setGameGrid,
+      resetGame,
   } = useTronContext();
   const [newPlayer, setNewPlayer] = useState<Partial<Player>>({});
 
   const addPlayer = () => {
     if (gameStatus !== 'playing') {
+      resetGame();
       let type = 'human';
       let controlScheme = getUserControlScheme();
       if (players.filter(player => player.type === 'human').length >= allControlSchemes.length) {
@@ -187,6 +189,7 @@ const PlayerManager: React.FC = () => {
       setPlayers([...newPlayers]);
       setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
       setNewPlayer({});
+
     }
   };
 
@@ -211,6 +214,7 @@ const PlayerManager: React.FC = () => {
     const removePlayer = (id: number) => {
       try{
         if (gameStatus !== 'playing') {
+          resetGame();
           let newPlayers = players.filter(player => player.id !== id);
           newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
           const controlScheme = players.find(player => player.id === id)?.controlScheme;

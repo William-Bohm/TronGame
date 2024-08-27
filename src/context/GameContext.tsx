@@ -212,10 +212,10 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     let newGrid = Array(gridSize.height).fill(null).map(() =>
         Array(gridSize.width).fill(0)
     );
-    for (let player of resetPlayers) {
-      const [x, y] = player.position;
-      newGrid[y][x] = player.id;
-    }
+    // for (let player of resetPlayers) {
+    //   const [x, y] = player.position;
+    //   newGrid[y][x] = player.id;
+    // }
 
     setGameGrid(newGrid);
   };
