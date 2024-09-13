@@ -21,14 +21,16 @@ class Line3D {
   private material: THREE.MeshPhongMaterial;
   private progress: number;
   private lastPosition: THREE.Vector3;
+  private startTime: number; // Start time in seconds
 
-  constructor(scene: THREE.Scene, waypoints: Waypoint[]) {
+  constructor(scene: THREE.Scene, waypoints: Waypoint[], startTime: number) {
     this.scene = scene;
     this.waypoints = waypoints;
     this.currentWaypointIndex = 0;
     this.progress = 0;
     this.currentSegment = null;
     this.lastPosition = waypoints[0].position.clone();
+    this.startTime = startTime;
 
     this.material = new THREE.MeshPhongMaterial({
       color: 0x7DFDFE,
@@ -79,47 +81,52 @@ class Line3D {
     return segment;
   }
 
-update(deltaTime: number): boolean {
-  if (!this.currentSegment) return false;
+  update(deltaTime: number, elapsedTime: number): boolean {
+    // Check if the start time has been reached
+    if (elapsedTime < this.startTime) return true;
 
-  const currentWaypoint = this.waypoints[this.currentWaypointIndex];
+    if (!this.currentSegment) return false;
 
-  if (!currentWaypoint) return false;
+    const currentWaypoint = this.waypoints[this.currentWaypointIndex];
 
-  this.progress += currentWaypoint.speed * deltaTime;
+    if (!currentWaypoint) return false;
 
-  if (this.progress >= 1) {
-    // Finish current segment
-    this.updateSegmentScale(this.currentSegment, 1);
+    this.progress += currentWaypoint.speed * deltaTime;
 
-    // Update last position to current waypoint's position
-    this.lastPosition.copy(currentWaypoint.position);
+    if (this.progress >= 1) {
+      // Finish current segment
+      this.updateSegmentScale(this.currentSegment, 1);
 
-    this.currentWaypointIndex++;
-    this.progress = 0;
+      // Update last position to current waypoint's position
+      this.lastPosition.copy(currentWaypoint.position);
 
-    // Check if we've reached the end of the waypoints
-    if (this.currentWaypointIndex >= this.waypoints.length - 1) {
-      return false; // We're done with all waypoints
+      this.currentWaypointIndex++;
+      this.progress = 0;
+
+      // Check if we've reached the end of the waypoints
+      if (this.currentWaypointIndex >= this.waypoints.length - 1) {
+        return false; // We're done with all waypoints
+      }
+
+      // Create next segment
+      this.createNextSegment();
+    } else if (this.currentSegment) {
+      // Grow the current segment
+      this.updateSegmentScale(this.currentSegment, this.progress);
     }
 
-    // Create next segment
-    this.createNextSegment();
-  } else if (this.currentSegment) {
-    // Grow the current segment
-    this.updateSegmentScale(this.currentSegment, this.progress);
+    return true;
   }
-
-  return true;
-}
 
   private updateSegmentScale(segment: THREE.Mesh, progress: number) {
     const initialScale = Line3D.LINE_WIDTH / segment.userData.fullLength;
     const remainingScale = 1 - initialScale;
-    const newScale = initialScale + (remainingScale * progress);
+    const newScale = initialScale + remainingScale * progress;
     segment.scale.setX(newScale);
   }
 }
+
+
 const ThreeScene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -146,42 +153,49 @@ const ThreeScene: React.FC = () => {
     );
     composer.addPass(bloomPass);
 
-    camera.position.set(5, 5, 10);
+    camera.position.set(5, 5, 30);
     // camera.lookAt(2.5, 2.5, 2.5);
 
     // Define waypoints
     const waypoints1: Waypoint[] = [
-    { position: new THREE.Vector3(0, 0, 0), speed: 1 },
-    { position: new THREE.Vector3(10, 0, 0), speed: 1 },
-    { position: new THREE.Vector3(10, 5, 0), speed: 1 },
-    { position: new THREE.Vector3(20, 5, 0), speed: 1 },
-  ];
+      { position: new THREE.Vector3(-40, 15, -20), speed: 0.5 },
+      { position: new THREE.Vector3(65, 15, -20), speed: 2 },
+      { position: new THREE.Vector3(65, -8, -20), speed: 1 },
+      { position: new THREE.Vector3(100, -8, -20), speed: 2 },
+      { position: new THREE.Vector3(100, -8, 0), speed: 1.1 },
+      { position: new THREE.Vector3(153, -8, 0), speed: 2 },
+      { position: new THREE.Vector3(153, -8, -10), speed: 2 },
+      { position: new THREE.Vector3(153, 5, -10), speed: 1 },
+      { position: new THREE.Vector3(170, 5, -10), speed: 0.3 },
+      { position: new THREE.Vector3(170, 70, -10), speed: 1 },
+    ];
 
-  // const waypoints2: Waypoint[] = [
-  //   { position: new THREE.Vector3(8, 0, 0), speed: 2 },
-  //   { position: new THREE.Vector3(3, 0, 0), speed: 2 },
-  //   { position: new THREE.Vector3(3, 4, 0), speed: 2 },
-  //   { position: new THREE.Vector3(6, 4, 0), speed: 2 },
-  //   { position: new THREE.Vector3(6, 1, 0), speed: 2 },
-  //   { position: new THREE.Vector3(1, 1, 0), speed: 2 },
-  //   { position: new THREE.Vector3(1, 7, 0), speed: 2 },
-  //   { position: new THREE.Vector3(5, 7, 0), speed: 2 },
-  //   { position: new THREE.Vector3(5, 2, 0), speed: 2 },
-  //   { position: new THREE.Vector3(0, 2, 0), speed: 2 },
-  // ];
+    const waypoints2: Waypoint[] = [
+      { position: new THREE.Vector3(70, 50, -20), speed: 1 },
+      { position: new THREE.Vector3(70, -7, -20), speed: 1 },
+      { position: new THREE.Vector3(100, -7, -20), speed: 2 },
+      { position: new THREE.Vector3(100, -7, 0), speed: 1 },
+      { position: new THREE.Vector3(150, -7, 0), speed: 2 },
+      { position: new THREE.Vector3(150, -7, -10), speed: 2 },
+      { position: new THREE.Vector3(150, 6, -10), speed: 0.8 },
+      { position: new THREE.Vector3(170, 6, -10), speed: 1 },
+    ];
 
     const lines: Line3D[] = [];
 
     // Add initial lines
-    lines.push(new Line3D(scene, waypoints1));
+    lines.push(new Line3D(scene, waypoints1, 0));
+    lines.push(new Line3D(scene, waypoints2, 1.5));
     // lines.push(new Line3D(scene, waypoints2));
 
     // Animation loop
     let lastTime = 0;
-    let cameraSpeed = 5; // Adjust this value to change the speed of camera movement
+    let elapsedTime = 0;
+    let cameraSpeed = 25; // Adjust this value to change the speed of camera movement
 
     const animate = (time: number) => {
       const deltaTime = (time - lastTime) / 1000;
+      elapsedTime += deltaTime;
       lastTime = time;
 
       // Move camera to the right
@@ -192,7 +206,7 @@ const ThreeScene: React.FC = () => {
 
       // Update all lines and remove finished ones
       for (let i = lines.length - 1; i >= 0; i--) {
-        if (!lines[i].update(deltaTime)) {
+        if (!lines[i].update(deltaTime, elapsedTime)) {
           lines.splice(i, 1);
         }
       }
