@@ -56,6 +56,9 @@ interface TronContextType {
   availableControlSchemes: ControlScheme[];
   setAvailableControlSchemes: (schemes: ControlScheme[]) => void;
   allControlSchemes: readonly ControlScheme[];
+
+  introComplete: boolean;
+    setIntroComplete: (introComplete: boolean) => void;
 }
 
 export const TronContext = createContext<TronContextType | undefined>(undefined);
@@ -65,6 +68,7 @@ interface TronProviderProps {
 }
 
 export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
+  const [introComplete, setIntroComplete] = useState(false);
   const [gridSize, setGridSize] = useState({ width: 10, height: 10 });
   const [gameGrid, setGameGrid] = useState<number[][]>(
       Array(gridSize.height).fill(null).map(() =>
@@ -543,7 +547,9 @@ const gameLoop = () => {
     gameLoop,
     calculatePlayerStartPositions,
     updateGridSize,
-    desiredDirections
+    desiredDirections,
+    introComplete,
+    setIntroComplete
   };
 
   return <TronContext.Provider value={value}>{children}</TronContext.Provider>;

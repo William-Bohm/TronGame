@@ -11,6 +11,7 @@ import BoardSizeSelector from "./components/ControllerComponents/BoardSizeSelect
 import styled from 'styled-components';
 import Controls from "./components/Controls";
 import './TronGame.css';
+import ThreeScene from "./components/animations/ThreeScene";
 
 const TopRowWrapper = styled.div`
   display: flex;
@@ -83,14 +84,19 @@ const AppContainer = styled.div`
   overflow: hidden;
 `;
 
-const LogoAnimation: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+const LogoAnimation: React.FC = ({ }) => {
+
+ const {
+    setIntroComplete
+  } = useTronContext();
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onComplete();
-    }, 3000); // Adjust this time to match your animation duration
+      setIntroComplete(true);
+    }, 13000); // Adjust this time to match your animation duration
 
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []);
 
   return (
     <div className="logo-animation">
@@ -101,7 +107,7 @@ const LogoAnimation: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
 
 
 const TronGame: React.FC = () => {
-  const [animationComplete, setAnimationComplete] = useState(false);
+  // const [animationComplete, setAnimationComplete] = useState(false);
 
 
  const {
@@ -109,7 +115,8 @@ const TronGame: React.FC = () => {
     gameStatus,
     modelInitialized,
     initBoard,
-  desiredDirections
+  desiredDirections,
+     introComplete,
 
   } = useTronContext();
 
@@ -202,24 +209,28 @@ const TronGame: React.FC = () => {
       <AppContainer>
         <GlobalStyles />
           {/*<SceneTest/>*/}
-        {/*{!animationComplete ? (*/}
-        {/*  <LogoAnimation onComplete={() => setAnimationComplete(true)} />*/}
-        {/*) : (*/}
-        {/*  <MainContent className="game-container">*/}
-        {/*    <LeftColumn>*/}
-        {/*        <NeonLogo />*/}
-        {/*      <ControlsWrapper>*/}
-        {/*        <Controls />*/}
-        {/*      </ControlsWrapper>*/}
-        {/*      <PlayerManagerWrapper>*/}
-        {/*        <PlayerManager />*/}
-        {/*      </PlayerManagerWrapper>*/}
-        {/*    </LeftColumn>*/}
-        {/*    <GameBoardWrapper>*/}
-        {/*      <GameBoard />*/}
-        {/*    </GameBoardWrapper>*/}
-        {/*  </MainContent>*/}
-        {/*)}*/}
+        {!introComplete ? (
+            <div>
+                <ThreeScene/>
+                {/*<LogoAnimation />*/}
+            </div>
+
+        ) : (
+          <MainContent className="game-container">
+            <LeftColumn>
+                <NeonLogo />
+              <ControlsWrapper>
+                <Controls />
+              </ControlsWrapper>
+              <PlayerManagerWrapper>
+                <PlayerManager />
+              </PlayerManagerWrapper>
+            </LeftColumn>
+            <GameBoardWrapper>
+              <GameBoard />
+            </GameBoardWrapper>
+          </MainContent>
+        )}
       </AppContainer>
     </ThemeProvider>
   );

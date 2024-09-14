@@ -3,11 +3,23 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import Letter3D from "./letters";
+import {useTronContext} from "../../context/GameContext";
 
 interface Waypoint {
   position: THREE.Vector3;
   speed: number;
 }
+
+interface LetterOptions {
+  letter: string;
+  startPosition: THREE.Vector3;
+  endPosition: THREE.Vector3;
+  startTime: number;
+  duration: number;
+  initialDuration: number;
+}
+
 
 class Line3D {
   private static readonly LINE_WIDTH = 0.1;
@@ -156,7 +168,7 @@ const ThreeScene: React.FC = () => {
     camera.position.set(5, 5, 30);
     // camera.lookAt(2.5, 2.5, 2.5);
 
-    // Define waypoints
+    // Define lines
     const waypoints1: Waypoint[] = [
       { position: new THREE.Vector3(-40, 15, -20), speed: 0.5 },
       { position: new THREE.Vector3(65, 15, -20), speed: 2 },
@@ -183,10 +195,55 @@ const ThreeScene: React.FC = () => {
 
     const lines: Line3D[] = [];
 
+
     // Add initial lines
     lines.push(new Line3D(scene, waypoints1, 0));
     lines.push(new Line3D(scene, waypoints2, 1.5));
-    // lines.push(new Line3D(scene, waypoints2));
+
+
+    // define letters
+    const lettersGroup = new THREE.Group();
+    scene.add(lettersGroup);
+
+    // Function to create letter options
+    function createLetterOptions(
+      letter: string,
+      xPosition: number,
+      zPosition: number = -20
+    ): LetterOptions {
+      return {
+        letter: letter,
+        startPosition: new THREE.Vector3(
+          (Math.random() - 0.5) * 100,
+          (Math.random() - 0.5) * 100,
+          -100 // Adjust as needed
+        ),
+        endPosition: new THREE.Vector3(xPosition, 0, zPosition),
+        startTime: 0, // All letters start at the same time
+        initialDuration: 1, // Random duration between 2 and 3 seconds
+        duration: 1 + Math.random(),    // Random duration between 3 and 5 seconds
+      };
+    }
+
+    const text = 'Tronvolution';
+
+    const lettersData: LetterOptions[] = [
+      createLetterOptions('T', -23),
+      createLetterOptions('r', -18),
+      createLetterOptions('o', -14),
+      createLetterOptions('n', -9),
+      createLetterOptions('v', -4),
+      createLetterOptions('o', 1),
+      createLetterOptions('l', 6),
+      createLetterOptions('u', 8),
+      createLetterOptions('t', 13),
+      createLetterOptions('i', 16),
+      createLetterOptions('o', 17),
+      createLetterOptions('n', 22),
+    ];
+
+    let letters: Letter3D[] = [];
+
 
     // Animation loop
     let lastTime = 0;
@@ -211,6 +268,21 @@ const ThreeScene: React.FC = () => {
         }
       }
 
+      // Update all letters and remove finished ones
+      if (elapsedTime > 7.3 && letters.length == 0) {
+        letters = lettersData.map(
+          (options) => new Letter3D(lettersGroup, options) // Pass lettersGroup instead of scene
+        );
+      }
+      lettersGroup.position.x += cameraSpeed * deltaTime;
+
+      // Update all letters and remove finished ones
+      for (let i = letters.length - 1; i >= 0; i--) {
+        if (!letters[i].update(deltaTime, elapsedTime - 7.3)) {
+          letters.splice(i, 1);
+        }
+      }
+
       composer.render();
       requestAnimationFrame(animate);
     };
@@ -221,6 +293,20 @@ const ThreeScene: React.FC = () => {
     return () => {
       mountRef.current?.removeChild(renderer.domElement);
     };
+  }, []);
+
+
+  // end scene
+   const {
+    setIntroComplete
+  } = useTronContext();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIntroComplete(true);
+    }, 13000); // Adjust this time to match your animation duration
+
+    return () => clearTimeout(timer);
   }, []);
 
   return <div ref={mountRef} />;
