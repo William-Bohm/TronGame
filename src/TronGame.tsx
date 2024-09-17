@@ -238,7 +238,7 @@ const TronGame: React.FC = () => {
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <AppContainer>
         <GlobalStyles />
-          <CubeRain/>
+          {/*<CubeRain/>*/}
         {!introComplete ? (
             <div>
                 <ThreeScene/>
