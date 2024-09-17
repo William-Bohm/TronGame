@@ -413,9 +413,7 @@ const getMoveSuggestion = async (playerId: number): Promise<Direction> => {
   };
 
 const gameLoop = () => {
-  console.log("game loop running...");
   if (gameStatus !== 'playing') {
-    console.log('game not running');
     return;
   }
 

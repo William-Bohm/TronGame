@@ -66,7 +66,7 @@ class Letter3D {
     const geometry = new TextGeometry(this.options.letter, {
       font: Letter3D.font,
       size: 5,
-      height: 1,
+      depth: 1,
       curveSegments: 12,
     });
 

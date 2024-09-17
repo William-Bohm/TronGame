@@ -5,6 +5,35 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import Letter3D from "./letters";
 import {useTronContext} from "../../context/GameContext";
+import styled from "styled-components";
+
+const SceneContainer = styled.div`
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+`;
+
+const SkipIntroButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.primary};
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  z-index: 1000;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.background};
+    box-shadow: 0 0 15px ${({ theme }) => theme.colors.primary};
+  }
+`;
 
 interface Waypoint {
   position: THREE.Vector3;
@@ -141,6 +170,8 @@ class Line3D {
 
 const ThreeScene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
+    const animationFrameIdRef = useRef<number | null>(null);
+
 
   useEffect(() => {
     // Scene setup
@@ -284,17 +315,49 @@ const ThreeScene: React.FC = () => {
       }
 
       composer.render();
-      requestAnimationFrame(animate);
-    };
+
+      // Stop the animation loop after 13 seconds
+      if (elapsedTime <= 13) {
+        animationFrameIdRef.current = requestAnimationFrame(animate);
+      } else {
+        // Animation complete, set introComplete to true
+        setIntroComplete(true);
+      }    };
 
     animate(0);
 
-    // Cleanup
+
+    // Start the animation loop
+    animationFrameIdRef.current = requestAnimationFrame(animate);
+
+    // Cleanup function
     return () => {
+      if (animationFrameIdRef.current) {
+        if (typeof animationFrameIdRef.current === "number") {
+          cancelAnimationFrame(animationFrameIdRef.current);
+        }
+      }
+
+      // Dispose of renderer
+      renderer.dispose();
+
+      // Dispose of scene objects
+      scene.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+
+          if (Array.isArray(object.material)) {
+            object.material.forEach((material) => material.dispose());
+          } else if (object.material) {
+            object.material.dispose();
+          }
+        }
+      });
+
+      // Remove the renderer's DOM element
       mountRef.current?.removeChild(renderer.domElement);
     };
   }, []);
-
 
   // end scene
    const {
@@ -304,12 +367,22 @@ const ThreeScene: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIntroComplete(true);
-    }, 13000); // Adjust this time to match your animation duration
+    }, 13000);
 
     return () => clearTimeout(timer);
   }, []);
 
-  return <div ref={mountRef} />;
+  return (
+    <SceneContainer>
+      <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+      <SkipIntroButton
+        onClick={() => setIntroComplete(true)}
+        disabled={false}
+      >
+        Skip Intro
+      </SkipIntroButton>
+    </SceneContainer>
+  );
 };
 
 export default ThreeScene;

@@ -27,36 +27,12 @@ const StyledCanvas = styled.canvas`
   max-width: 100%;
   max-height: 100%;
   border: 2px solid ${({ theme }) => theme.colors.primary};
-  box-shadow: 
-    0 0 5px ${({ theme }) => theme.colors.primary},
-    0 0 10px ${({ theme }) => theme.colors.primary},
-    0 0 20px ${({ theme }) => theme.colors.primary};
+  // box-shadow: 
+  //   0 0 5px ${({ theme }) => theme.colors.primary},
+  //   0 0 10px ${({ theme }) => theme.colors.primary},
+  //   0 0 20px ${({ theme }) => theme.colors.primary};
 `;
 
-const StartButton = styled.button`
-  //width: 100%;
-  margin-top: 20px;
-  background: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.primary};
-  border: 2px solid ${({ theme }) => theme.colors.primary};
-  box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
-  border-radius: 10px;
-  padding: 10px 20px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: background 0.2s ease-in-out;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.background};
-    box-shadow: 0 0 15px ${({ theme }) => theme.colors.primary};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
 
 const MAX_GRID_LINES = 20;
 
@@ -93,8 +69,6 @@ const GameBoard: React.FC = () => {
   useEffect(() => {
     const handleResize = () => {
       const { boardWidth, cellSize } = calculateBoardSize();
-      console.log(boardWidth)
-      console.log(cellSize)
 
       setBoardWidth(boardWidth);
       setCellSize(cellSize);
@@ -126,7 +100,7 @@ const GameBoard: React.FC = () => {
     const ySpacing = Math.max(1, Math.floor(gridSize.height / MAX_GRID_LINES));
 
     // Draw the grid with subtle neon lines
-    ctx.strokeStyle = `#7DFDFE`;
+    ctx.strokeStyle = `#C0C0C0`;
     ctx.lineWidth = 1;
     for (let y = 0; y < gridSize.height; y += ySpacing) {
       for (let x = 0; x < gridSize.width; x += xSpacing) {
@@ -175,13 +149,6 @@ const GameBoard: React.FC = () => {
       <CanvasContainer >
         <StyledCanvas ref={canvasRef} />
       </CanvasContainer>
-      <StartButton
-        onClick={startGame}
-        disabled={!modelInitialized || gameStatus === 'playing'}
-        style={{ width: `${canvasWidth}px` }}
-      >
-        {gameStatus === 'playing' ? 'Game in Progress' : 'Start Game'}
-      </StartButton>
     </GameBoardContainer>
   );
 };

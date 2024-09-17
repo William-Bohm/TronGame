@@ -123,8 +123,8 @@ const ArrowButton = styled.div<{ direction: 'up' | 'down' }>`
 `;
 
 const AddPlayerButton = styled.button`
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.background};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.primary};
   border: 2px solid ${({ theme }) => theme.colors.primary};
   box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
   border-radius: 10px;
@@ -135,9 +135,9 @@ const AddPlayerButton = styled.button`
   transition: background 0.3s ease-in-out;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.secondary};
-    color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 0 0 15px ${({ theme }) => theme.colors.secondary};
+    background: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.background};
+    box-shadow: 0 0 15px ${({ theme }) => theme.colors.primary};
   }
 `;
 

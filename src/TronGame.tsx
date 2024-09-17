@@ -12,6 +12,7 @@ import styled from 'styled-components';
 import Controls from "./components/Controls";
 import './TronGame.css';
 import ThreeScene from "./components/animations/ThreeScene";
+import CubeRain from "./components/animations/fallingCubes";
 
 const TopRowWrapper = styled.div`
   display: flex;
@@ -27,6 +28,33 @@ const TopRowWrapper = styled.div`
   @media (max-width: 800px) {
     flex-direction: column;
     align-items: center;
+  }
+`;
+
+const StartButton = styled.button`
+  margin-left: 20px;
+  margin-bottom:  20px;
+    padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.primary};
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
+  border-radius: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.background};
+    box-shadow: 0 0 15px ${({ theme }) => theme.colors.primary};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -87,7 +115,8 @@ const AppContainer = styled.div`
 const LogoAnimation: React.FC = ({ }) => {
 
  const {
-    setIntroComplete
+    setIntroComplete,
+     startGame
   } = useTronContext();
 
   useEffect(() => {
@@ -117,6 +146,7 @@ const TronGame: React.FC = () => {
     initBoard,
   desiredDirections,
      introComplete,
+     startGame
 
   } = useTronContext();
 
@@ -208,13 +238,11 @@ const TronGame: React.FC = () => {
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <AppContainer>
         <GlobalStyles />
-          {/*<SceneTest/>*/}
+          <CubeRain/>
         {!introComplete ? (
             <div>
                 <ThreeScene/>
-                {/*<LogoAnimation />*/}
             </div>
-
         ) : (
           <MainContent className="game-container">
             <LeftColumn>
@@ -225,6 +253,12 @@ const TronGame: React.FC = () => {
               <PlayerManagerWrapper>
                 <PlayerManager />
               </PlayerManagerWrapper>
+                <StartButton
+                    onClick={startGame}
+                    disabled={!modelInitialized || gameStatus === 'playing'}
+                  >
+                    {gameStatus === 'playing' ? 'Game in Progress' : 'Start Game'}
+                  </StartButton>
             </LeftColumn>
             <GameBoardWrapper>
               <GameBoard />

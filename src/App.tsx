@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import TronGame from "./TronGame";
-import ThreeScene from "./components/animations/ThreeScene";
-
 
 const App: React.FC = () => {
   return (
