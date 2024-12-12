@@ -46,7 +46,7 @@ const GameBoard: React.FC = () => {
     modelInitialized
   } = useTronContext();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const [canvasWidth, setCanvasWidth] = useState(0);
+  const [canvasWidth, setCanvasWidth] = useState(0);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -59,8 +59,8 @@ const GameBoard: React.FC = () => {
   const [cellSize, setCellSize] = useState(0);
 
   const calculateBoardSize = () => {
-    const maxWidth = Math.min(window.innerWidth * (3/5)); // 90% of window width, max 800px
-    const maxHeight = Math.min(window.innerHeight * (3/5)); // 90% of window width, max 800px
+    const maxWidth = Math.min(window.innerWidth * (3 / 5)); // 90% of window width, max 800px
+    const maxHeight = Math.min(window.innerHeight * (3 / 5)); // 90% of window width, max 800px
     const cellSize = Math.floor(maxWidth / gridSize.width);
     const actualWidth = cellSize * gridSize.width;
     return { boardWidth: actualWidth, cellSize };

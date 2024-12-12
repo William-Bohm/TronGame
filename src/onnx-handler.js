@@ -4,7 +4,7 @@ let modelSession = null;
 
 export async function initializeModelSession() {
   try {
-    modelSession = await ort.InferenceSession.create('/tron_model.onnx');
+    modelSession = await ort.InferenceSession.create('/tron_model_v2.onnx');
     console.log('Model initialized successfully');
     return true;
   } catch (err) {
@@ -19,7 +19,7 @@ export async function getModelMoveSuggestion(input, shape) {
   }
 
   const tensor = new ort.Tensor('float32', input, shape);
-  const feeds = { 'l_x_': tensor };
+  const feeds = { 'input': tensor };
   const results = await modelSession.run(feeds);
-  return results.squeeze.data[0];
+  return results['output'].data[0];
 }
