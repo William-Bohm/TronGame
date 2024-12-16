@@ -5,11 +5,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack serve --mode development",
+    "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "type-check": "tsc --noEmit",
-    "model": "node --loader ts-node/esm src/model.ts"
+    "model": "node --loader ts-node/esm src/model.ts",
+    "serve-build": "serve -s dist"
   },
+
   "keywords": [],
   "author": "",
   "license": "ISC",

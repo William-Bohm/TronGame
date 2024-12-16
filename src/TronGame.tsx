@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import GameBoard from './components/GameBoard';
 import PlayerManager from './components/PlayerManager';
-import {useTronContext} from "./context/GameContext";
+import {Player, useTronContext} from "./context/GameContext";
 import {ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "./theme";
 import GlobalStyles from './GlobalStyles';
@@ -146,7 +146,8 @@ const TronGame: React.FC = () => {
     initBoard,
   desiredDirections,
      introComplete,
-     startGame
+     startGame,
+     controlSchemeMappings
 
   } = useTronContext();
 
@@ -158,65 +159,19 @@ const TronGame: React.FC = () => {
   }, [modelInitialized, initBoard]);
 
 
-
-  // handle key press's
-  const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    if (gameStatus !== 'playing') return;
-
-    players.forEach(player => {
-      if (player.type === 'human') {
-        let direction: 'up' | 'down' | 'left' | 'right' | null = null;
-
-        switch (player.controlScheme) {
-          case 'wasd':
-            if (event.key === 'w') direction = 'up';
-            if (event.key === 'a') direction = 'left';
-            if (event.key === 's') direction = 'down';
-            if (event.key === 'd') direction = 'right';
-            break;
-          case 'arrows':
-            if (event.key === 'ArrowUp') direction = 'up';
-            if (event.key === 'ArrowLeft') direction = 'left';
-            if (event.key === 'ArrowDown') direction = 'down';
-            if (event.key === 'ArrowRight') direction = 'right';
-            break;
-
-            case 'ijkl':
-            if (event.key === 'i') direction = 'up';
-            if (event.key === 'j') direction = 'left';
-            if (event.key === 'k') direction = 'down';
-            if (event.key === 'l') direction = 'right';
-            break;
-
-            case "pl;'":
-            if (event.key === 'p') direction = 'up';
-            if (event.key === 'l') direction = 'left';
-            if (event.key === ';' ) direction = 'down';
-            if (event.key === "'") direction = 'right';
-            break;
-
-            case 'yghj':
-            if (event.key === 'y') direction = 'up';
-            if (event.key === 'g') direction = 'left';
-            if (event.key === 'h') direction = 'down';
-            if (event.key === 'j') direction = 'right';
-            break;
-
-            case 'numpad':
-            if (event.key === '8') direction = 'up';
-            if (event.key === '4') direction = 'left';
-            if (event.key === '5') direction = 'down';
-            if (event.key === '6') direction = 'right';
-            break;
+    // handle key press's
+    const handleKeyPress = useCallback((event: KeyboardEvent) => {
+      if (gameStatus !== 'playing') return;
+      players.forEach((player: Player) => {
+        if (player.type === 'human') {
+          // Use optional chaining to safely access nested properties
+          const direction = controlSchemeMappings[player.controlScheme!]?.[event.key];
+          if (direction) {
+            desiredDirections.current[player.id] = direction;
+          }
         }
-
-
-        if (direction) {
-          desiredDirections.current[player.id] = direction;
-        }
-      }
-    });
-  }, [players, gameStatus]);
+      });
+    }, [gameStatus, players]);
 
 
     useEffect(() => {

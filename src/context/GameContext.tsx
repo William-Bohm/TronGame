@@ -4,9 +4,14 @@ import init, { run_engine, Move } from "../wasm/trust.js"
 
 export type Position = [number, number];
 export type PlayerType = 'human' | 'bot';
+// control scheme types
 export type ControlScheme = 'wasd' | 'yghj' | 'arrows' | 'ijkl' | "pl;'" | 'numpad' | 'bot';
+type KeyMap = Record<string, Direction>;
+type ControlSchemesMapping = Record<ControlScheme, KeyMap>;
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
+
+//
 
 /*
  * TODO: Want to be able to iterate through all directions.
@@ -63,6 +68,7 @@ interface TronContextType {
   availableControlSchemes: ControlScheme[];
   setAvailableControlSchemes: (schemes: ControlScheme[]) => void;
   allControlSchemes: readonly ControlScheme[];
+  controlSchemeMappings: ControlSchemesMapping;
 
   introComplete: boolean;
   setIntroComplete: (introComplete: boolean) => void;
@@ -93,7 +99,15 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     'yghj', 'ijkl', "pl;'", 'numpad', 'bot'
   ]);
   const allControlSchemes = ['wasd', 'yghj', 'arrows', 'ijkl', "pl;'", 'numpad', 'bot'] as const;
-
+const controlSchemeMappings: ControlSchemesMapping = {
+    wasd: { w: 'up', a: 'left', s: 'down', d: 'right' },
+    arrows: { ArrowUp: 'up', ArrowLeft: 'left', ArrowDown: 'down', ArrowRight: 'right' },
+    ijkl: { i: 'up', j: 'left', k: 'down', l: 'right' },
+    "pl;'": { p: 'up', l: 'left', ';': 'down', "'": 'right' },
+    yghj: { y: 'up', g: 'left', h: 'down', j: 'right' },
+    numpad: { '8': 'up', '4': 'left', '5': 'down', '6': 'right' },
+    bot: {} // Empty mapping for bot
+};
   const updateGridSize = (width: number, height: number) => {
     if (gameStatus === 'playing') return;
     setGridSize({ width, height });
@@ -473,6 +487,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     availableControlSchemes,
     setAvailableControlSchemes,
     allControlSchemes,
+    controlSchemeMappings,
     initBoard: initBoard,
     gameLoop,
     calculatePlayerStartPositions,
