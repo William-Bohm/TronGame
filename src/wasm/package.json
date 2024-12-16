@@ -1,0 +1,15 @@
+{
+  "name": "trust",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "trust_bg.wasm",
+    "trust.js",
+    "trust.d.ts"
+  ],
+  "main": "trust.js",
+  "types": "trust.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
