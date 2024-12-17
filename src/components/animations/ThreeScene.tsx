@@ -364,14 +364,6 @@ const ThreeScene: React.FC = () => {
     setIntroComplete
   } = useTronContext();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIntroComplete(true);
-    }, 13000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <SceneContainer>
       <div ref={mountRef} style={{ width: '100%', height: '100%' }} />

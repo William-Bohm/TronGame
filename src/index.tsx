@@ -5,9 +5,14 @@ import {TronProvider} from "./context/GameContext";
 import './app.css';
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
-  <React.StrictMode>
       <TronProvider>
         <App />
       </TronProvider>
-  </React.StrictMode>
 );
+// root.render(
+//   <React.StrictMode>
+//       <TronProvider>
+//         <App />
+//       </TronProvider>
+//   </React.StrictMode>
+// );

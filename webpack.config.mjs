@@ -11,6 +11,7 @@ export default {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
+    publicPath: '/'
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -64,6 +65,8 @@ export default {
     ],
     compress: true,
     port: 3000,
+    historyApiFallback: true,
+
   },
   ignoreWarnings: [/Failed to parse source map/],
   externals: {

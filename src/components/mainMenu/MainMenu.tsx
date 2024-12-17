@@ -4,7 +4,7 @@ import NeonLogo from "../NeonLogo";
 const MainMenu: React.FC = () => {
     return (
         <div>
-            <NeonLogo/>
+            <NeonLogo />
         </div>
     )
 };
