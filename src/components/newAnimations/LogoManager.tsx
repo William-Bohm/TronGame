@@ -1,8 +1,11 @@
 // LetterAnimationManager.ts
 import {AnimationManager} from "./AnimationManager";
-import Letter3D from "../animations/letters"; // Move Letter3D to separate file
 import * as THREE from 'three';
 import {screenToWorld} from "./SceneManager";
+import {Line3D, Waypoint} from "./components/Line3d";
+import {UnderlineMesh} from "./components/simpleLine3d";
+import {materials} from "../../threeJSMeterials";
+import Letter3D from "./components/Letters3D";
 
 interface LetterOptions {
     letter: string;
@@ -23,50 +26,44 @@ export enum LogoPosition {
 
 export class LogoManager extends AnimationManager {
     private letters: Letter3D[] = [];
-    private lettersGroup: THREE.Group;
+    public currentAnimation: 'unInitialized' | 'intro' | 'mainMenu' | 'game' = 'unInitialized';
+    public lettersGroup: THREE.Group;
     private letterOptions: LetterOptions[];
     private startTime: number;
     private lettersInitialized: boolean = false;
-    private currentPosition: LogoPosition = LogoPosition.CENTER;
-
-
+    public currentPosition: LogoPosition = LogoPosition.CENTER;
+    private underlines: UnderlineMesh[] = [];
+    private underlineSidelines: UnderlineMesh[] = [];
+    public isUnderlineVisible: boolean = false;
+    public isUnderlineSidelinesVisible: boolean = false;
 
     constructor(scene: THREE.Scene, letterOptions: LetterOptions[], startTime: number) {
         super(scene);
         this.lettersGroup = new THREE.Group();
-        this.lettersGroup.position.x = 3; // Add desired offset to the left
+        this.lettersGroup.position.x = 0;
         this.scene.add(this.lettersGroup);
         this.letterOptions = letterOptions;
         this.startTime = startTime;
-
     }
-
-
         private getScreenCoordinates(position: LogoPosition): { x: number, y: number, z: number } {
         switch (position) {
             case LogoPosition.TOP_MIDDLE:
                 return {
-                    x: window.innerWidth * 0.45,
+                    x: window.innerWidth * 0.47,
                     y: window.innerHeight * -0.01,
-                    z: 0
-                };
-            case LogoPosition.TOP_LEFT:
-                return {
-                    x: window.innerWidth * 0.1,
-                    y: window.innerHeight * -0.01,
-                    z: 0
+                    z: -20
                 };
             case LogoPosition.TOP_RIGHT:
                 return {
                     x: window.innerWidth * 0.9,
                     y: window.innerHeight * -0.01,
-                    z: 0
+                    z: -20
                 };
             case LogoPosition.CENTER:
                 return {
-                    x: window.innerWidth * 0.5,
+                    x: window.innerWidth * 0.49,
                     y: window.innerHeight * 0.5,
-                    z: 0
+                    z: -20
                 };
             default:
                 return {
@@ -78,7 +75,8 @@ export class LogoManager extends AnimationManager {
     }
 
     // Method to resize/reposition logo based on current position
-    public resizeLogo(camera: THREE.PerspectiveCamera): void {
+    public resizeLogo(camera: THREE.PerspectiveCamera, speed: number = 0.0001): void {
+        console.log('Resizing logo to: ', this.currentPosition);
         const coords = this.getScreenCoordinates(this.currentPosition);
         const worldPos = screenToWorld(
             camera,
@@ -86,11 +84,13 @@ export class LogoManager extends AnimationManager {
             coords.y,
             coords.z
         );
-        this.moveToPosition(worldPos, 0.1);
+        console.log('World pos: ', worldPos);
+        this.moveToPosition(worldPos, speed);
     }
 
     // Your existing helper methods
-    public moveToTopMiddle(camera: THREE.PerspectiveCamera): void {
+    public moveToTopMiddle(camera: THREE.PerspectiveCamera, speed: number = 2): void {
+        this.currentPosition = LogoPosition.TOP_MIDDLE;
         const coords = this.getScreenCoordinates(LogoPosition.TOP_MIDDLE);
         const worldPos = screenToWorld(
             camera,
@@ -98,35 +98,10 @@ export class LogoManager extends AnimationManager {
             coords.y,
             coords.z
         );
-        this.moveToPosition(worldPos, 2);
-        this.currentPosition = LogoPosition.TOP_MIDDLE;
+        this.moveToPosition(worldPos, speed);
     }
 
-    private moveToTopLeft(camera: THREE.PerspectiveCamera): void {
-        const coords = this.getScreenCoordinates(LogoPosition.TOP_LEFT);
-        const worldPos = screenToWorld(
-            camera,
-            coords.x,
-            coords.y,
-            coords.z
-        );
-        this.moveToPosition(worldPos, 1);
-        this.currentPosition = LogoPosition.TOP_LEFT;
-    }
-
-    private moveToTopRight(camera: THREE.PerspectiveCamera): void {
-        const coords = this.getScreenCoordinates(LogoPosition.TOP_RIGHT);
-        const worldPos = screenToWorld(
-            camera,
-            coords.x,
-            coords.y,
-            coords.z
-        );
-        this.moveToPosition(worldPos, 1);
-        this.currentPosition = LogoPosition.TOP_RIGHT;
-    }
-
-    private moveToCenter(camera: THREE.PerspectiveCamera): void {
+    public moveToCenter(camera: THREE.PerspectiveCamera, speed: number = 2): void {
         const coords = this.getScreenCoordinates(LogoPosition.CENTER);
         const worldPos = screenToWorld(
             camera,
@@ -134,7 +109,7 @@ export class LogoManager extends AnimationManager {
             coords.y,
             coords.z
         );
-        this.moveToPosition(worldPos, 1);
+        this.moveToPosition(worldPos, speed);
         this.currentPosition = LogoPosition.CENTER;
     }
 
@@ -143,8 +118,6 @@ export class LogoManager extends AnimationManager {
             ? 4 * t * t * t
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
-
-
 
     // Update the original moveToPosition function with optional easing types
     public moveToPosition(targetPosition: THREE.Vector3, duration: number = 1.0): void {
@@ -167,27 +140,58 @@ export class LogoManager extends AnimationManager {
         animate(this.elapsedTime);
     }
 
-    private initializeLetters(): void {
+    public skipIntroAnimation(camera: THREE.PerspectiveCamera): void {
+        // create letters if don't exist yet
+        if (this.currentAnimation === 'unInitialized') {
+            this.initializeLetters(camera);
+            this.currentAnimation = 'intro';
+        }
+
+        for (let i = this.letters.length - 1; i >= 0; i--) {
+            this.letters[i].skipToEnd();
+            this.currentPosition = LogoPosition.TOP_MIDDLE;
+        }
+
+        this.lettersGroup.position.x = camera.position.x;
+
+
+        this.resizeLogo(camera, 0.0001);
+    }
+
+    public initializeLetters(camera: THREE.PerspectiveCamera): void {
+        console.log('Initializing letters');
+        this.resizeLogo(camera);
         this.letters = this.letterOptions.map(
-            options => new Letter3D(this.lettersGroup, options)
+            options => new Letter3D(this.lettersGroup, options, materials.neonBlue)
         );
+        this.lettersInitialized = true;
+        this.elapsedTime = 0;
+    }
+
+    public updateLettersIntro(deltaTime: number, cameraSpeed: number, camera: THREE.PerspectiveCamera): void {
+        this.elapsedTime += deltaTime;
+        if (this.elapsedTime < 4) {
+            for (let i = this.letters.length - 1; i >= 0; i--) {
+                this.letters[i].update(deltaTime, this.elapsedTime - this.startTime)
+            }
+        }
+
+
+        this.lettersGroup.position.x += deltaTime * cameraSpeed;
+    }
+
+    public updateLogoUnderline(deltaTime: number, cameraSpeed: number): void {
+        this.underlines.forEach(underline => {
+            underline.animate(deltaTime, this.isUnderlineVisible);
+        });
+        this.underlineSidelines.forEach(underline => {
+            underline.animate(deltaTime, this.isUnderlineSidelinesVisible);
+        });
     }
 
     update(deltaTime: number, cameraSpeed: number): boolean {
-        this.elapsedTime += deltaTime;
-
-        if (this.elapsedTime > this.startTime && !this.lettersInitialized && this.letters.length === 0) {
-            this.initializeLetters();
-            this.lettersInitialized = true;
-        }
-
-
-        for (let i = this.letters.length - 1; i >= 0; i--) {
-            this.letters[i].update(deltaTime, this.elapsedTime - this.startTime)
-        }
         this.lettersGroup.position.x += deltaTime * cameraSpeed;
-
-        return this.letters.length > 0;
+        return true
     }
 
     cleanup(): void {
@@ -198,4 +202,44 @@ export class LogoManager extends AnimationManager {
         this.letters = [];
         console.log('LetterAnimationManager cleanup complete');
     }
+
+
+//     underline
+    public toggleUnderline(): void {
+        this.isUnderlineVisible = !this.isUnderlineVisible;
+
+        if (this.isUnderlineVisible && this.underlines.length === 0) {
+            this.createUnderline();
+        }
+    }
+
+    public toggleUnderlineSidelines(): void {
+        console.log('toggling underline sidelines');
+        this.isUnderlineSidelinesVisible = !this.isUnderlineSidelinesVisible;
+        //
+        // if (this.isUnderlineSidelinesVisible && this.underlineSidelines.length === 0) {
+        //     this.createUnderline();
+        // }
+    }
+
+
+
+    private createUnderline(): void {
+        // Calculate total width of letters
+        const bbox = new THREE.Box3().setFromObject(this.lettersGroup);
+        const width = bbox.max.x - bbox.min.x;
+
+        // Create underline
+        const underlineVector = new THREE.Vector3(2, -2, -20);
+        const leftLineVector = new THREE.Vector3(-width * 2 / 3 - 4.5 , 2, -20);
+        const rightLineVector = new THREE.Vector3(width * 2 / 3 + 8.5, 2, -20);
+        const underline = new UnderlineMesh(this.lettersGroup, width*2, underlineVector, 100, materials.neonBlue);
+        const leftLine = new UnderlineMesh(this.lettersGroup, width * 2/ 5, leftLineVector, 20, materials.neonOrange);
+        const rightLine = new UnderlineMesh(this.lettersGroup, width * 2  / 5, rightLineVector, 20, materials.neonOrange);
+        this.underlines.push(underline);
+        this.underlineSidelines.push(leftLine);
+        this.underlineSidelines.push(rightLine);
+        console.log('Underline created');
+    }
+
 }

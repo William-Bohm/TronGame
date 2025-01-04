@@ -2,32 +2,31 @@
 import * as THREE from 'three';
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
 import {LineAnimationManager} from "./LineManager";
-import {LogoManager} from "./LogoManager";
+import {LogoManager, LogoPosition} from "./LogoManager";
 import {Waypoint} from "./components/Line3d";
 import {useTronContext} from "../../context/GameContext";
 import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass";
 import {UnrealBloomPass} from "three/examples/jsm/postprocessing/UnrealBloomPass";
+import {colors} from "../../threeJSMeterials";
 
-export function screenToWorld(camera: any, screenX: number, screenY: number, targetZ: number): THREE.Vector3 {
-    const aspect = window.innerWidth / window.innerHeight;
+export function screenToWorld(camera: any, screenX: number, screenY: number, targetZ: number) {
+    const ndcX = (screenX / window.innerWidth) * 2 - 1;
+    const ndcY = -(screenY / window.innerHeight) * 2 + 1;
 
-    // Convert screen coordinates to normalized device coordinates (-1 to +1)
-    const normalizedX = (screenX / window.innerWidth) * 2 - 1;
-    const normalizedY = -(screenY / window.innerHeight) * 2 + 1;
+    // Unproject two points: one on the near plane and one on the far plane
+    const nearPoint = new THREE.Vector3(ndcX, ndcY, 0).unproject(camera);
+    const farPoint = new THREE.Vector3(ndcX, ndcY, 1).unproject(camera);
 
-    // Calculate the field of view in radians
-    const fovRadians = (camera.fov * Math.PI) / 180;
+    // Direction from camera through the screen point
+    const dir = farPoint.clone().sub(nearPoint).normalize();
 
-    // Calculate the visible height at the target Z distance
-    const visibleHeight = 2 * Math.tan(fovRadians / 2) * Math.abs(targetZ - camera.position.z);
-    const visibleWidth = visibleHeight * (window.innerWidth / window.innerHeight);
+    // Calculate intersection with targetZ plane
+    const distance = (targetZ - nearPoint.z) / dir.z;
+    const worldPosition = nearPoint.add(dir.multiplyScalar(distance));
 
-    // Calculate world space coordinates
-    const worldX = (normalizedX * visibleWidth / 2) + camera.position.x;
-    const worldY = (normalizedY * visibleHeight / 2) + camera.position.y;
-
-    return new THREE.Vector3(worldX, worldY, targetZ);
+    return worldPosition;
 }
+
 // Define lines
 const waypoints1: Waypoint[] = [
     {position: new THREE.Vector3(-40, 15, -20), speed: 0.5},
@@ -77,6 +76,126 @@ const lettersData: LetterOptions[] = [
     createLetterOptions('n', 22),
 ];
 
+const _NOISE_GLSL = `
+//
+// Description : Array and textureless GLSL 2D/3D/4D simplex
+//               noise functions.
+//      Author : Ian McEwan, Ashima Arts.
+//  Maintainer : stegu
+//     Lastmod : 20201014 (stegu)
+//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
+//               Distributed under the MIT License. See LICENSE file.
+//               https://github.com/ashima/webgl-noise
+//               https://github.com/stegu/webgl-noise
+//
+
+vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 mod289(vec4 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 permute(vec4 x) {
+     return mod289(((x*34.0)+1.0)*x);
+}
+
+vec4 taylorInvSqrt(vec4 r)
+{
+  return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+float snoise(vec3 v)
+{
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+// First corner
+  vec3 i  = floor(v + dot(v, C.yyy) );
+  vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+// Other corners
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min( g.xyz, l.zxy );
+  vec3 i2 = max( g.xyz, l.zxy );
+
+  //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+  //   x1 = x0 - i1  + 1.0 * C.xxx;
+  //   x2 = x0 - i2  + 2.0 * C.xxx;
+  //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+// Permutations
+  i = mod289(i);
+  vec4 p = permute( permute( permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+// Gradients: 7x7 points over a square, mapped onto an octahedron.
+// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+  float n_ = 0.142857142857; // 1.0/7.0
+  vec3  ns = n_ * D.wyz - D.xzx;
+
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+
+  vec4 b0 = vec4( x.xy, y.xy );
+  vec4 b1 = vec4( x.zw, y.zw );
+
+  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+  vec3 p0 = vec3(a0.xy,h.x);
+  vec3 p1 = vec3(a0.zw,h.y);
+  vec3 p2 = vec3(a1.xy,h.z);
+  vec3 p3 = vec3(a1.zw,h.w);
+
+//Normalise gradients
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  p0 *= norm.x;
+  p1 *= norm.y;
+  p2 *= norm.z;
+  p3 *= norm.w;
+
+// Mix final noise value
+  vec4 m = max(0.5 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 105.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+float FBM(vec3 p) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  float frequency = 0.0;
+  for (int i = 0; i < 6; ++i) {
+    value += amplitude * snoise(p);
+    p *= 2.0;
+    amplitude *= 0.5;
+  }
+  return value;
+}
+`;
+
+
+
 function createLetterOptions(
     letter: string,
     xPosition: number,
@@ -96,13 +215,12 @@ function createLetterOptions(
     };
 }
 
-// const {
-//     setIntroComplete,
-//     introComplete
-// } = useTronContext();
+
 
 export class SceneManager {
     private currentViewportType: 'mobile' | 'tablet' | 'desktop' = 'desktop';
+    public _currentAnimation: 'intro' | 'mainMenu' | 'game' = 'intro';
+    private onAnimationChange?: (animation: 'intro' | 'mainMenu' | 'game') => void;
     private scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
     private renderer: THREE.WebGLRenderer;
@@ -112,16 +230,21 @@ export class SceneManager {
     private cameraSpeed: number = 25;
     private elapsedTime: number = 0;
     private introComplete: boolean = false;
+    private startTime: number;
 
     constructor(container: HTMLDivElement) {
         console.log("initializing scene");
         this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(colors.darkGrey);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({antialias: true});
-
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio * 1.5);
         container.appendChild(this.renderer.domElement);
+
+        this.startTime = Date.now();
 
         // Composer and passes setup
         this.composer = new EffectComposer(this.renderer);
@@ -130,8 +253,8 @@ export class SceneManager {
 
         const bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1,  // Strength
-            0.8,  // Radius
+            0.5,  // Strength
+            0.1,  // Radius
             0.2  // Threshold
         );
         this.composer.addPass(bloomPass);
@@ -151,7 +274,6 @@ export class SceneManager {
 
         this.introLineManager = new LineAnimationManager(this.scene, waypoints, startTimes);
         this.logoManager = new LogoManager(this.scene, lettersData, 0);  // start time is supposed to be 7.3
-
          // resize controller
         window.addEventListener('resize', this.handleWindowResize.bind(this));
         this.handleWindowResize();
@@ -190,11 +312,6 @@ export class SceneManager {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
 
-        // If viewport type changed, recalculate logo position
-        if (viewportChanged) {
-            this.logoManager.resizeLogo(this.camera);
-        }
-
         // Rest of your resize logic
         this.renderer.setSize(width, height);
         this.composer.setSize(width, height);
@@ -204,21 +321,112 @@ export class SceneManager {
         if (bloomPass) {
             bloomPass.resolution.set(width, height);
         }
+
+        this.logoManager.resizeLogo(this.camera);
     }
 
     update(deltaTime: number): void {
         this.elapsedTime += deltaTime;
-        this.updateCamera(deltaTime);
-        this.introLineManager.update(deltaTime);
-        this.logoManager.update(deltaTime, this.cameraSpeed);
-        this.composer.render();
-
-        if (!this.introComplete && this.elapsedTime > 1) {
-            this.introComplete = true;
-            this.cameraSpeed = 0;
-            this.introLineManager.cleanup();
-            this.logoManager.moveToTopMiddle(this.camera);
+        // intro, main menu, game
+        switch (this.currentAnimation) {
+            case 'intro':
+                this.updateIntro(deltaTime);
+                break;
+            case 'mainMenu':
+                this.updateMainMenu(deltaTime);
+                break;
         }
+
+        // this.introLineManager.update(deltaTime);
+
+        // if (!this.introComplete && this.elapsedTime > 10) {
+        //     this.introComplete = true;
+        //     this.cameraSpeed = 0;
+        //     this.introLineManager.cleanup();
+        //     this.logoManager.moveToTopMiddle(this.camera);
+        //     this.logoManager.toggleUnderline();
+        // }
+
+        this.composer.render();
+    }
+
+    private updateMainMenu(deltaTime: number): void {
+
+    }
+
+    private updateIntro(deltaTime: number): void {
+        this.introLineManager.update(deltaTime);
+        this.updateCamera(deltaTime);
+
+        // logo animation
+        switch (this.logoManager.currentAnimation) {
+            case 'unInitialized': {
+                if (this.elapsedTime > 7.2) {
+                    this.logoManager.initializeLetters(this.camera);
+                    this.logoManager.currentAnimation = 'intro';
+                }
+                return;
+            }
+            case 'intro': {
+                this.logoManager.updateLettersIntro(deltaTime, this.cameraSpeed, this.camera);
+
+                if (this.elapsedTime > 11.3 && this.logoManager.currentPosition != LogoPosition.TOP_MIDDLE) {
+                    this.cameraSpeed = 0;
+                    this.logoManager.currentPosition = LogoPosition.TOP_MIDDLE;
+                    this.logoManager.resizeLogo(this.camera, 2);
+                }
+
+                if (this.elapsedTime > 12) {
+                    if (!this.logoManager.isUnderlineVisible) {
+                        this.logoManager.toggleUnderline();
+                    }
+                    if (!this.logoManager.isUnderlineSidelinesVisible && this.elapsedTime > 14) {
+                        this.logoManager.toggleUnderlineSidelines();
+                    }
+
+                    this.logoManager.updateLogoUnderline(deltaTime, this.cameraSpeed);
+                }
+
+                if (this.elapsedTime > 20) {
+                    console.log('intro done');
+                    this.elapsedTime = 0;
+                    this.currentAnimation = 'mainMenu';
+                    this.logoManager.currentAnimation = 'mainMenu';
+                    this.introComplete = true;
+                    this.cameraSpeed = 0;
+                    this.introLineManager.cleanup();
+                }
+            }
+        }
+    }
+
+    public skipIntro(): void {
+        this.currentAnimation = 'mainMenu';
+        this.cameraSpeed = 0;
+        console.log('skipping intro');
+        this.introComplete = true;
+        // handle lines
+        this.introLineManager.cleanup();
+
+        // handle logo
+        this.logoManager.skipIntroAnimation(this.camera);
+
+        // handle underlines
+        // if (!this.logoManager.isUnderlineVisible) {
+        //     this.logoManager.toggleUnderline();
+        // }
+        // if (!this.logoManager.isUnderlineSidelinesVisible && this.elapsedTime > 14) {
+        //     this.logoManager.toggleUnderlineSidelines();
+        // }
+        // this.logoManager.updateLogoUnderline(100, this.cameraSpeed);
+        //
+        // this.currentAnimation = 'mainMenu';
+        // this.logoManager.currentAnimation = 'mainMenu';
+        // this.introComplete = true;
+        // this.cameraSpeed = 0;
+        this.logoManager.currentAnimation = 'mainMenu';
+
+
     }
 
     private updateCamera(deltaTime: number): void {
@@ -226,6 +434,20 @@ export class SceneManager {
         this.camera.position.x += this.cameraSpeed * deltaTime;
         this.camera.lookAt(this.camera.position.x, this.camera.position.y, 0);
         // }
+    }
+
+    // animation controller
+    setAnimationChangeCallback(callback: (animation: 'intro' | 'mainMenu' | 'game') => void) {
+        this.onAnimationChange = callback;
+    }
+
+    set currentAnimation(value: 'intro' | 'mainMenu' | 'game') {
+        this._currentAnimation = value;  // Use the private property
+        this.onAnimationChange?.(value);
+    }
+
+    get currentAnimation() {
+        return this._currentAnimation;  // Return the private property
     }
 
     cleanup(): void {

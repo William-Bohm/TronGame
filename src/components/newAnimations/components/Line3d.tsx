@@ -11,7 +11,7 @@ export class Line3D {
     private static readonly LINE_HEIGHT = 0.2;
     private static readonly LINE_DEPTH = 0.2;
 
-    private scene: THREE.Scene;
+    private scene: THREE.Scene | THREE.Group;
     private waypoints: Waypoint[];
     private currentWaypointIndex: number;
     private currentSegment: THREE.Mesh | null;
@@ -21,7 +21,7 @@ export class Line3D {
     private lastPosition: THREE.Vector3 | null;
     private startTime: number; // Start time in seconds
 
-    constructor(scene: THREE.Scene, waypoints: Waypoint[], startTime: number) {
+    constructor(scene: THREE.Scene | THREE.Group, waypoints: Waypoint[], startTime: number) {
         this.scene = scene;
         this.waypoints = waypoints;
         this.currentWaypointIndex = 0;
@@ -92,29 +92,30 @@ export class Line3D {
 
         this.progress += currentWaypoint.speed * deltaTime;
 
-        if (this.progress >= 1) {
-            // Finish current segment
-            this.updateSegmentScale(this.currentSegment, 1);
+    if (this.progress >= 1) {
+        // Finish current segment
+        this.updateSegmentScale(this.currentSegment, 1);
 
-            // Add current segment to completed segments before creating new one
-            if (this.currentSegment) {
-                this.completedSegments.push(this.currentSegment);
-            }
+        // Add current segment to completed segments
+        if (this.currentSegment) {
+            this.completedSegments.push(this.currentSegment);
+        }
 
-            // Update last position to current waypoint's position
-            this.lastPosition?.copy(currentWaypoint.position);
+        // Update last position to current waypoint's position
+        this.lastPosition?.copy(currentWaypoint.position);
 
-            this.currentWaypointIndex++;
-            this.progress = 0;
+        this.currentWaypointIndex++;
+        this.progress = 0;
 
-            // Check if we've reached the end of the waypoints
-            if (this.currentWaypointIndex >= this.waypoints.length - 1) {
-                return false; // We're done with all waypoints
-            }
+        // Check if we've reached the end of the waypoints
+        if (this.currentWaypointIndex >= this.waypoints.length - 1) {
+            this.currentSegment = null; // Clear the current segment
+            return false; // We're done with all waypoints
+        }
 
-            // Create next segment
-            this.createNextSegment();
-        } else if (this.currentSegment) {
+        // Only create next segment if we haven't reached the end
+        this.createNextSegment();
+    } else if (this.currentSegment) {
             // Grow the current segment
             this.updateSegmentScale(this.currentSegment, this.progress);
         }

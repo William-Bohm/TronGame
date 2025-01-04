@@ -26,15 +26,16 @@ class Letter3D {
 
   private initialRotation: THREE.Quaternion = new THREE.Quaternion();
   private finalRotation: THREE.Quaternion = new THREE.Quaternion();
+  private isComplete: boolean = false;
 
-  constructor(parent: THREE.Object3D, options: LetterOptions) {
+  constructor(parent: THREE.Object3D, options: LetterOptions, material: THREE.MeshPhongMaterial) {
     this.parent = parent;
     this.options = options;
 
     if (Letter3D.font) {
-      this.createMesh();
+      this.createMesh(material);
     } else {
-      this.loadFont().then(() => this.createMesh());
+      this.loadFont().then(() => this.createMesh(material));
     }
   }
 
@@ -61,7 +62,7 @@ class Letter3D {
     await Letter3D.fontLoading;
   }
 
-  private createMesh() {
+  private createMesh(material: THREE.MeshPhongMaterial) {
     if (!Letter3D.font) return;
 
     const geometry = new TextGeometry(this.options.letter, {
@@ -69,13 +70,6 @@ class Letter3D {
       size: 5,
       depth: 1,
       curveSegments: 12,
-    });
-
-    const material = new THREE.MeshPhongMaterial({
-      color: 0x7dfdfe,
-      emissive: 0x7dfdfe,
-      emissiveIntensity: 0.7,
-      shininess: 100,
     });
 
     this.mesh = new THREE.Mesh(geometry, material);
@@ -101,6 +95,7 @@ class Letter3D {
 
 update(deltaTime: number, elapsedTime: number): boolean {
   if (!this.mesh) return true;
+  if (this.isComplete) return false;
 
   const { startTime, initialDuration, duration, startPosition, endPosition } = this.options;
 
@@ -167,6 +162,30 @@ public cleanup(): void {
     // Clear references
     this.initialRotation.set(0, 0, 0, 1);
     this.finalRotation.set(0, 0, 0, 1);
+}
+
+public async skipToEnd(): Promise<void> {
+  // If mesh doesn't exist yet, wait for it to be created
+  if (!this.mesh) {
+    // Wait for font loading and mesh creation
+    await new Promise<void>(resolve => {
+      const checkMesh = () => {
+        if (this.mesh) {
+          resolve();
+        } else {
+          setTimeout(checkMesh, 50); // Check every 50ms
+        }
+      };
+      checkMesh();
+    });
+  }
+
+  console.log('Skipping to end:', this.options.letter);
+
+  // Now we know the mesh exists
+  this.isComplete = true;
+  this.mesh!.position.copy(this.options.endPosition);
+  this.mesh!.quaternion.copy(this.finalRotation);
 }
 
 // You might also want to add a static cleanup method to handle the font

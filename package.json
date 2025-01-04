@@ -25,12 +25,17 @@
     "axios": "^1.7.5",
     "onnxruntime-web": "^1.19.0",
     "postprocessing": "^6.36.2",
+    "r3f-stage": "^0.3.5",
+    "randomish": "^0.1.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
     "react-router-dom": "^7.0.2",
+    "shader-composer": "^0.4.9",
     "styled-components": "^6.1.12",
-    "three": "^0.168.0"
+    "three": "^0.168.0",
+    "vfx-composer": "^0.4.0",
+    "vfx-composer-r3f": "^0.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
