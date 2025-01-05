@@ -11,6 +11,7 @@ import {SceneManager} from "./SceneManager";
 
 import {NeonMultiLine} from "./mainMenuLines/mainMenuLinesComponent";
 import {AnimatedLine, LineSegment} from "./mainMenuLines/newLines";
+import FuturisticButton from "./components/SciFiComponents/SciFiButton1";
 
 
 const AppContainer = styled.div`
@@ -70,6 +71,25 @@ const ToggleLinesButton = styled.button`
     }
 `;
 
+const UIOverlay = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; // This allows clicks to pass through to the scene
+    z-index: 1;
+`;
+
+const ButtonWrapper = styled.div`
+    pointer-events: auto; // This re-enables clicks for the button
+    position: absolute;
+    // You can position your button wherever you want
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+`;
+
 
 type LineConfig = {
     start: { xPercent: number; yPercent: number };
@@ -87,9 +107,7 @@ const ThreeScene3: React.FC = () => {
     const mountRef = useRef<HTMLDivElement>(null);
     const sceneManagerRef = useRef<SceneManager | null>(null);
     const [currentAnimation, setCurrentAnimation] = useState<'intro' | 'mainMenu' | 'game'>('intro');
-    const [isLinesVisible, setIsLinesVisible] = useState(true);
     const [lineGroups, setLineGroups] = useState<{ [key: string]: LineSegment[] }>({});
-
 
     useEffect(() => {
         console.log('ThreeScene3 mounted');
@@ -127,174 +145,186 @@ const ThreeScene3: React.FC = () => {
         introComplete
     } = useTronContext();
 
-    const toggleLines = () => {
-        setIsLinesVisible(prev => !prev);
-    };
-
-const lineConfigs: LineSegmentGroup[] = [
-    {
-        id: 'line1',
-        color: '#007bff',
-        thickness: 3,
-        segments: [
-            {
-                start: {xPercent: 40, yPercent: 100},
-                end: {xPercent: 30, yPercent: 90}
-            },
-            {
-                start: {xPercent: 30, yPercent: 90},
-                end: {xPercent: 7, yPercent: 90}
-            },
-            {
-                start: {xPercent: 7, yPercent: 90},
-                end: {xPercent: 5, yPercent: 87}
-            },
-            {
-                start: {xPercent: 5, yPercent: 87},
-                end: {xPercent: 5, yPercent: 30}
-            },
-            {
-                start: {xPercent: 5, yPercent: 30},
-                end: {xPercent: 0, yPercent: 23}
-            },
-        ]
-    },
-    {
-        id: 'line2',
-        color: '#007bff',
-        thickness: 3,
-        segments: [
-            {
-                start: {xPercent: 40, yPercent: 102},
-                end: {xPercent: 30, yPercent: 92}
-            },
-            {
-                start: {xPercent: 30, yPercent: 92},
-                end: {xPercent: 7, yPercent: 92}
-            },
-            {
-                start: {xPercent: 7, yPercent: 92},
-                end: {xPercent: 5, yPercent: 89}
-            },
-            {
-                start: {xPercent: 5, yPercent: 89},
-                end: {xPercent: 5, yPercent: 32}
-            },
-            {
-                start: {xPercent: 5, yPercent: 32},
-                end: {xPercent: 0, yPercent: 25}
-            },
-        ]
-    },
-    {
-        id: 'line3',
-        color: '#007bff',
-        thickness: 3,
-        segments: [
-            {
-                start: {xPercent: 42, yPercent: 100},
-                end: {xPercent: 30, yPercent: 88}
-            },
-            {
-                start: {xPercent: 30, yPercent: 88},
-                end: {xPercent: 7, yPercent: 88}
-            },
-            {
-                start: {xPercent: 7, yPercent: 88},
-                end: {xPercent: 5, yPercent: 85}
-            },
-            {
-                start: {xPercent: 5, yPercent: 85},
-                end: {xPercent: 5, yPercent: 28}
-            },
-            {
-                start: {xPercent: 5, yPercent: 28},
-                end: {xPercent: 0, yPercent: 21}
-            },
-        ]
-    },
+    const lineConfigs: LineSegmentGroup[] = [
         {
-        id: 'mirroredLine1',
-        color: '#007bff',
-        thickness: 3,
-        segments: [
-            {
-                start: {xPercent: 60, yPercent: 100},
-                end: {xPercent: 70, yPercent: 90}
-            },
-            {
-                start: {xPercent: 70, yPercent: 90},
-                end: {xPercent: 93, yPercent: 90}
-            },
-            {
-                start: {xPercent: 93, yPercent: 90},
-                end: {xPercent: 95, yPercent: 87}
-            },
-            {
-                start: {xPercent: 95, yPercent: 87},
-                end: {xPercent: 95, yPercent: 30}
-            },
-            {
-                start: {xPercent: 95, yPercent: 30},
-                end: {xPercent: 100, yPercent: 23}
-            },
-        ]
-    },
-    {
-        id: 'mirroredLine2',
-        color: '#007bff',
-        thickness: 3,
-        segments: [
-            {
-                start: {xPercent: 60, yPercent: 102},
-                end: {xPercent: 70, yPercent: 92}
-            },
-            {
-                start: {xPercent: 70, yPercent: 92},
-                end: {xPercent: 93, yPercent: 92}
-            },
-            {
-                start: {xPercent: 93, yPercent: 92},
-                end: {xPercent: 95, yPercent: 89}
-            },
-            {
-                start: {xPercent: 95, yPercent: 89},
-                end: {xPercent: 95, yPercent: 32}
-            },
-            {
-                start: {xPercent: 95, yPercent: 32},
-                end: {xPercent: 100, yPercent: 25}
-            },
-        ]
-    },
-    {
-        id: 'mirroredLine3',
-        color: '#007bff',
-        thickness: 3,
-        segments: [
-            {
-                start: {xPercent: 58, yPercent: 100},
-                end: {xPercent: 70, yPercent: 88}
-            },
-            {
-                start: {xPercent: 70, yPercent: 88},
-                end: {xPercent: 93, yPercent: 88}
-            },
-            {
-                start: {xPercent: 93, yPercent: 88},
-                end: {xPercent: 95, yPercent: 85}
-            },
-            {
-                start: {xPercent: 95, yPercent: 85},
-                end: {xPercent: 95, yPercent: 28}
-            },
-            {
-                start: {xPercent: 95, yPercent: 28},
-                end: {xPercent: 100, yPercent: 21}
-            },
-        ]
-    }
-];
+            id: 'line1',
+            color: '#007bff',
+            thickness: 3,
+            segments: [
+                {
+                    start: {xPercent: 40, yPercent: 100},
+                    end: {xPercent: 30, yPercent: 93}
+                },
+                {
+                    start: {xPercent: 30, yPercent: 93},
+                    end: {xPercent: 7, yPercent: 93}
+                },
+                {
+                    start: {xPercent: 7, yPercent: 93},
+                    end: {xPercent: 5, yPercent: 90}
+                },
+                {
+                    start: {xPercent: 5, yPercent: 90},
+                    end: {xPercent: 5, yPercent: 30}
+                },
+                {
+                    start: {xPercent: 5, yPercent: 30},
+                    end: {xPercent: 0, yPercent: 23}
+                },
+            ]
+        },
+        {
+            id: 'line2',
+            color: '#007bff',
+            thickness: 3,
+            segments: [
+                {
+                    start: {xPercent: 40, yPercent: 102},
+                    end: {xPercent: 30, yPercent: 95}
+                },
+                {
+                    start: {xPercent: 30, yPercent: 95},
+                    end: {xPercent: 7, yPercent: 95}
+                },
+                {
+                    start: {xPercent: 7, yPercent: 95},
+                    end: {xPercent: 5, yPercent: 92}
+                },
+                {
+                    start: {xPercent: 5, yPercent: 92},
+                    end: {xPercent: 5, yPercent: 50}
+                },
+                {
+                    start: {xPercent: 5, yPercent: 50},
+                    end: {xPercent: 4, yPercent: 50}
+                },
+                {
+                    start: {xPercent: 4, yPercent: 50},
+                    end: {xPercent: 4, yPercent: 31}
+                },
+                {
+                    start: {xPercent: 4, yPercent: 31},
+                    end: {xPercent: 0, yPercent: 25}
+                },
+            ]
+        },
+        {
+            id: 'line3',
+            color: '#007bff',
+            thickness: 3,
+            segments: [
+                {
+                    start: {xPercent: 42, yPercent: 100},
+                    end: {xPercent: 30, yPercent: 91}
+                },
+                {
+                    start: {xPercent: 30, yPercent: 91},
+                    end: {xPercent: 7, yPercent: 91}
+                },
+                {
+                    start: {xPercent: 7, yPercent: 91},
+                    end: {xPercent: 5, yPercent: 88}
+                },
+                {
+                    start: {xPercent: 5, yPercent: 88},
+                    end: {xPercent: 5, yPercent: 70}
+                },
+                {
+                    start: {xPercent: 5, yPercent: 70},
+                    end: {xPercent: 6, yPercent: 70}
+                },
+                {
+                    start: {xPercent: 6, yPercent: 70},
+                    end: {xPercent: 6, yPercent: 29}
+                },
+                {
+                    start: {xPercent: 6, yPercent: 29},
+                    end: {xPercent: 0, yPercent: 21}
+                },
+            ]
+        },
+        {
+            id: 'mirroredLine1',
+            color: '#007bff',
+            thickness: 3,
+            segments: [
+                {
+                    start: {xPercent: 60, yPercent: 100},
+                    end: {xPercent: 70, yPercent: 93}
+                },
+                {
+                    start: {xPercent: 70, yPercent: 93},
+                    end: {xPercent: 93, yPercent: 93}
+                },
+                {
+                    start: {xPercent: 93, yPercent: 93},
+                    end: {xPercent: 95, yPercent: 90}
+                },
+                {
+                    start: {xPercent: 95, yPercent: 90},
+                    end: {xPercent: 95, yPercent: 30}
+                },
+                {
+                    start: {xPercent: 95, yPercent: 30},
+                    end: {xPercent: 100, yPercent: 23}
+                },
+            ]
+        },
+        {
+            id: 'mirroredLine2',
+            color: '#007bff',
+            thickness: 3,
+            segments: [
+                {
+                    start: {xPercent: 60, yPercent: 102},
+                    end: {xPercent: 70, yPercent: 95}
+                },
+                {
+                    start: {xPercent: 70, yPercent: 95},
+                    end: {xPercent: 93, yPercent: 95}
+                },
+                {
+                    start: {xPercent: 93, yPercent: 95},
+                    end: {xPercent: 95, yPercent: 92}
+                },
+                {
+                    start: {xPercent: 95, yPercent: 92},
+                    end: {xPercent: 95, yPercent: 32}
+                },
+                {
+                    start: {xPercent: 95, yPercent: 32},
+                    end: {xPercent: 100, yPercent: 25}
+                },
+            ]
+        },
+        {
+            id: 'mirroredLine3',
+            color: '#007bff',
+            thickness: 3,
+            segments: [
+                {
+                    start: {xPercent: 58, yPercent: 100},
+                    end: {xPercent: 70, yPercent: 91}
+                },
+                {
+                    start: {xPercent: 70, yPercent: 91},
+                    end: {xPercent: 93, yPercent: 91}
+                },
+                {
+                    start: {xPercent: 93, yPercent: 91},
+                    end: {xPercent: 95, yPercent: 88}
+                },
+                {
+                    start: {xPercent: 95, yPercent: 88},
+                    end: {xPercent: 95, yPercent: 28}
+                },
+                {
+                    start: {xPercent: 95, yPercent: 28},
+                    end: {xPercent: 100, yPercent: 21}
+                },
+            ]
+        }
+    ];
 
 
     useEffect(() => {
@@ -333,29 +363,37 @@ const lineConfigs: LineSegmentGroup[] = [
         <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
             <AppContainer>
                 <SceneContainer>
-                    <div ref={mountRef} style={{width: '100%', height: '100%'}}></div>
-                    {currentAnimation === 'intro' && (
-                        <SkipIntroButton
-                            onClick={() => sceneManagerRef.current?.skipIntro()}
-                            disabled={false}
-                        >
-                            Skip Intro bud
-                        </SkipIntroButton>
-                    )}
-                    <ToggleLinesButton
-                        onClick={toggleLines}
-                    >
-                        {isLinesVisible ? 'Hide Lines' : 'Show Lines'}
-                    </ToggleLinesButton>
+                    {/* Three.js scene */}
+                    <div ref={mountRef} style={{width: '100%', height: '100%'}}/>
 
-                    {lineConfigs.map(config => (
-                        <AnimatedLine
-                            segments={lineGroups[config.id] || []}
-                            color={config.color}
-                            thickness={config.thickness}
-                        />
-                    ))}
+                    {/* UI Overlay */}
+                    <UIOverlay>
+                        {/*{currentAnimation === 'intro' && (*/}
+                        {/*    <ButtonWrapper>*/}
+                        {/*        <SkipIntroButton*/}
+                        {/*            onClick={() => sceneManagerRef.current?.skipIntro()}*/}
+                        {/*            disabled={false}*/}
+                        {/*        >*/}
+                        {/*            Skip Intro bud*/}
+                        {/*        </SkipIntroButton>*/}
+                        {/*    </ButtonWrapper>*/}
+                        {/*)}*/}
 
+                        {lineConfigs.map(config => (
+                            <AnimatedLine
+                                segments={lineGroups[config.id] || []}
+                                color={config.color}
+                                thickness={config.thickness}
+                            />
+                        ))}
+
+                        <ButtonWrapper>
+                            <FuturisticButton
+                                text="start Game"
+                                onClick={() => console.log('Button clicked!')}
+                            />
+                        </ButtonWrapper>
+                    </UIOverlay>
                 </SceneContainer>
             </AppContainer>
         </ThemeProvider>
