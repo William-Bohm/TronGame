@@ -12,6 +12,7 @@ import {SceneManager} from "./SceneManager";
 import {NeonMultiLine} from "./mainMenuLines/mainMenuLinesComponent";
 import {AnimatedLine, LineSegment} from "./mainMenuLines/newLines";
 import FuturisticButton from "./components/SciFiComponents/SciFiButton1";
+import {CircleSlider} from "./components/SciFiComponents/CircleSelector";
 
 
 const AppContainer = styled.div`
@@ -90,6 +91,14 @@ const ButtonWrapper = styled.div`
     transform: translate(-50%, -50%);
 `;
 
+const GameSpeedWrapper = styled.div`
+    pointer-events: auto; // This re-enables clicks for the button
+    position: absolute;
+    // You can position your button wherever you want
+    top: 25%;
+    left: 50%;
+`;
+
 
 type LineConfig = {
     start: { xPercent: number; yPercent: number };
@@ -108,6 +117,8 @@ const ThreeScene3: React.FC = () => {
     const sceneManagerRef = useRef<SceneManager | null>(null);
     const [currentAnimation, setCurrentAnimation] = useState<'intro' | 'mainMenu' | 'game'>('intro');
     const [lineGroups, setLineGroups] = useState<{ [key: string]: LineSegment[] }>({});
+    const [gameSpeed, setGameSpeed] = useState(500);
+
 
     useEffect(() => {
         console.log('ThreeScene3 mounted');
@@ -386,6 +397,10 @@ const ThreeScene3: React.FC = () => {
                                 thickness={config.thickness}
                             />
                         ))}
+
+                        <GameSpeedWrapper>
+                            <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
+                        </GameSpeedWrapper>
 
                         <ButtonWrapper>
                             <FuturisticButton

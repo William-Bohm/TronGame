@@ -1,24 +1,18 @@
 import React, {useEffect, useState} from 'react';
 import styled, {keyframes} from 'styled-components';
+import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
+import {slideDown} from "./SciFiSlideDownAnimation";
 
 interface FuturisticButtonProps {
     text: string;
     onClick: () => void;
 }
 
-const lineAnimationTime = 15;
 
-// First, define the keyframes
-const slideDown = keyframes`
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-`;
+
+const lineAnimationTime = 20;
+
+
 
 // Then modify your ButtonContainer
 const ButtonContainer = styled.div`
@@ -42,7 +36,7 @@ const SVGContainer = styled.svg`
 
 const BorderPath = styled.path`
     fill: none;
-    stroke: rgba(64, 224, 208, 0.8);
+    stroke: ${() => toRGBA(cssFormatColors.neonBlue, 0.8)};
     stroke-width: 2;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
@@ -58,10 +52,10 @@ const TextContainer = styled.div`
     font-family: 'Orbitron', sans-serif;
     background: linear-gradient(
             90deg,
-            rgba(64, 224, 208, 0.2) 0%,
-            rgba(64, 224, 208, 0.7) 25%,
-            rgba(64, 224, 208, 0.7) 75%,
-            rgba(64, 224, 208, 0.2) 100%
+            ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 0%,
+            ${() => toRGBA(cssFormatColors.neonBlue, 0.7)} 25%,
+            ${() => toRGBA(cssFormatColors.neonBlue, 0.7)} 75%,
+            ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 100%
     );
     padding: 8px 80px;
     margin: 0;
@@ -83,10 +77,10 @@ const TextContainer = styled.div`
     ${ButtonContainer}:hover & {
         background: linear-gradient(
                 90deg,
-                rgba(64, 224, 208, 0.3) 0%,
-                rgba(64, 224, 208, 0.9) 25%,
-                rgba(64, 224, 208, 0.9) 75%,
-                rgba(64, 224, 208, 0.3) 100%
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 0%,
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 25%,
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 75%,
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 100%
         );
     }
 `;
@@ -113,7 +107,7 @@ const RightCircleSVGContainer = styled.svg`
 
 const CircleMarker = styled.circle`
     fill: none;
-    stroke: rgba(64, 224, 208, 0.8);
+    stroke: ${() => toRGBA(cssFormatColors.neonBlue, 0.8)};;
     stroke-width: 2;
 `;
 
@@ -128,7 +122,7 @@ const FuturisticButton: React.FC<FuturisticButtonProps> = ({
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowLines(true);
-        }, 1000);
+        }, 300);
 
         // Cleanup function
         return () => clearTimeout(timer);
