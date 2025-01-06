@@ -13,6 +13,7 @@ import {NeonMultiLine} from "./mainMenuLines/mainMenuLinesComponent";
 import {AnimatedLine, LineSegment} from "./mainMenuLines/newLines";
 import FuturisticButton from "./components/SciFiComponents/SciFiButton1";
 import {CircleSlider} from "./components/SciFiComponents/CircleSelector";
+import FuturisticButton2 from "./components/SciFiComponents/SciFitButton2";
 
 
 const AppContainer = styled.div`
@@ -82,13 +83,26 @@ const UIOverlay = styled.div`
     z-index: 1;
 `;
 
-const ButtonWrapper = styled.div`
-    pointer-events: auto; // This re-enables clicks for the button
+const StartButtonsAbsoluteWrapper = styled.div`
     position: absolute;
-    // You can position your button wherever you want
-    top: 90%;
+    top: 92%;
     left: 50%;
     transform: translate(-50%, -50%);
+    pointer-events: auto;
+
+    @media (max-width: 1000px) {
+        top: 90%; // or whatever percentage you want for mobile
+    }
+    @media (max-width: 750px) {
+        top: 92%; // or whatever percentage you want for mobile
+    }
+
+`;
+
+const StartButtonsRelativeWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; // Adds space between buttons
 `;
 
 const GameSpeedWrapper = styled.div`
@@ -97,6 +111,41 @@ const GameSpeedWrapper = styled.div`
     // You can position your button wherever you want
     top: 25%;
     left: 50%;
+`;
+
+const UIColumnsWrapper = styled.div`
+    position: absolute;
+    top: 15%;
+    left: 8%;
+    width: 84%;
+    height: 80%;
+    @media (max-width: 750px) {
+        left: 0;
+        width: 100%;
+
+    }
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none; // This allows clicking through to the Three.js scene
+`;
+
+const LeftColumn = styled.div`
+    position: relative;
+    width: 50%; // Adjust width as needed
+    height: 100%;
+    padding: 20px;
+    pointer-events: auto; // Re-enable pointer events for the UI elements
+    border: 2px solid ${({theme}) => theme.colors.primary};
+
+`;
+
+const RightColumn = styled.div`
+    position: relative;
+    width: 50%; // Adjust width as needed
+    height: 100%;
+    padding: 20px;
+    pointer-events: auto; // Re-enable pointer events for the UI elements
+    border: 2px solid ${({theme}) => theme.colors.primary};
 `;
 
 
@@ -112,12 +161,34 @@ type LineSegmentGroup = {
     segments: LineConfig[];
 };
 
+export const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth >= 750);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth >= 750);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+};
+
+// Use in component:
+const YourComponent = () => {
+  const isMobile = useIsMobile();
+  // ...rest of component
+};
+
 const ThreeScene3: React.FC = () => {
     const mountRef = useRef<HTMLDivElement>(null);
     const sceneManagerRef = useRef<SceneManager | null>(null);
     const [currentAnimation, setCurrentAnimation] = useState<'intro' | 'mainMenu' | 'game'>('intro');
     const [lineGroups, setLineGroups] = useState<{ [key: string]: LineSegment[] }>({});
     const [gameSpeed, setGameSpeed] = useState(500);
+    const isMobile = useIsMobile();
 
 
     useEffect(() => {
@@ -163,11 +234,11 @@ const ThreeScene3: React.FC = () => {
             thickness: 3,
             segments: [
                 {
-                    start: {xPercent: 40, yPercent: 100},
-                    end: {xPercent: 30, yPercent: 93}
+                    start: {xPercent: 35, yPercent: 100},
+                    end: {xPercent: 25, yPercent: 93}
                 },
                 {
-                    start: {xPercent: 30, yPercent: 93},
+                    start: {xPercent: 25, yPercent: 93},
                     end: {xPercent: 7, yPercent: 93}
                 },
                 {
@@ -190,11 +261,11 @@ const ThreeScene3: React.FC = () => {
             thickness: 3,
             segments: [
                 {
-                    start: {xPercent: 40, yPercent: 102},
-                    end: {xPercent: 30, yPercent: 95}
+                    start: {xPercent: 32, yPercent: 100},
+                    end: {xPercent: 25, yPercent: 95}
                 },
                 {
-                    start: {xPercent: 30, yPercent: 95},
+                    start: {xPercent: 25, yPercent: 95},
                     end: {xPercent: 7, yPercent: 95}
                 },
                 {
@@ -225,11 +296,11 @@ const ThreeScene3: React.FC = () => {
             thickness: 3,
             segments: [
                 {
-                    start: {xPercent: 42, yPercent: 100},
-                    end: {xPercent: 30, yPercent: 91}
+                    start: {xPercent: 38, yPercent: 100},
+                    end: {xPercent: 25, yPercent: 91}
                 },
                 {
-                    start: {xPercent: 30, yPercent: 91},
+                    start: {xPercent: 25, yPercent: 91},
                     end: {xPercent: 7, yPercent: 91}
                 },
                 {
@@ -260,11 +331,11 @@ const ThreeScene3: React.FC = () => {
             thickness: 3,
             segments: [
                 {
-                    start: {xPercent: 60, yPercent: 100},
-                    end: {xPercent: 70, yPercent: 93}
+                    start: {xPercent: 65, yPercent: 100},
+                    end: {xPercent: 75, yPercent: 93}
                 },
                 {
-                    start: {xPercent: 70, yPercent: 93},
+                    start: {xPercent: 75, yPercent: 93},
                     end: {xPercent: 93, yPercent: 93}
                 },
                 {
@@ -287,11 +358,11 @@ const ThreeScene3: React.FC = () => {
             thickness: 3,
             segments: [
                 {
-                    start: {xPercent: 60, yPercent: 102},
-                    end: {xPercent: 70, yPercent: 95}
+                    start: {xPercent: 68, yPercent: 100},
+                    end: {xPercent: 75, yPercent: 95}
                 },
                 {
-                    start: {xPercent: 70, yPercent: 95},
+                    start: {xPercent: 75, yPercent: 95},
                     end: {xPercent: 93, yPercent: 95}
                 },
                 {
@@ -314,11 +385,11 @@ const ThreeScene3: React.FC = () => {
             thickness: 3,
             segments: [
                 {
-                    start: {xPercent: 58, yPercent: 100},
-                    end: {xPercent: 70, yPercent: 91}
+                    start: {xPercent: 62, yPercent: 100},
+                    end: {xPercent: 75, yPercent: 91}
                 },
                 {
-                    start: {xPercent: 70, yPercent: 91},
+                    start: {xPercent: 75, yPercent: 91},
                     end: {xPercent: 93, yPercent: 91}
                 },
                 {
@@ -390,24 +461,43 @@ const ThreeScene3: React.FC = () => {
                         {/*    </ButtonWrapper>*/}
                         {/*)}*/}
 
-                        {lineConfigs.map(config => (
-                            <AnimatedLine
-                                segments={lineGroups[config.id] || []}
-                                color={config.color}
-                                thickness={config.thickness}
-                            />
-                        ))}
+                        {isMobile && (
+                            <>
+                                {lineConfigs.map(config => (
+                                    <AnimatedLine
+                                        segments={lineGroups[config.id] || []}
+                                        color={config.color}
+                                        thickness={config.thickness}
+                                    />
+                                ))}
+                            </>
+                        )}
 
-                        <GameSpeedWrapper>
-                            <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
-                        </GameSpeedWrapper>
+                        <UIColumnsWrapper>
+                            {/* Left Column */}
+                            <LeftColumn>
+                                {/* Put your left side content here */}
+                            </LeftColumn>
 
-                        <ButtonWrapper>
-                            <FuturisticButton
-                                text="start Game"
-                                onClick={() => console.log('Button clicked!')}
-                            />
-                        </ButtonWrapper>
+                            {/* Right Column */}
+                            <RightColumn>
+                                <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
+                            </RightColumn>
+                        </UIColumnsWrapper>
+
+                        <StartButtonsAbsoluteWrapper>
+                            <StartButtonsRelativeWrapper>
+                                <FuturisticButton2
+                                    text="How to Play"
+                                    onClick={() => console.log('Button clicked!')}
+                                />
+                                <FuturisticButton
+                                    text="Start Game"
+                                    onClick={() => console.log('Button clicked!')}
+                                />
+                            </StartButtonsRelativeWrapper>
+                        </StartButtonsAbsoluteWrapper>
+
                     </UIOverlay>
                 </SceneContainer>
             </AppContainer>

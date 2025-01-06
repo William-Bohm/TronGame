@@ -11,6 +11,43 @@ interface CircleSliderProps {
     onChange: (value: number) => void;
 }
 
+const typeAnimation = keyframes`
+  from { width: 0 }
+  to { width: 100% }
+`;
+
+const cursorAnimation = keyframes`
+  from, to { border-color: transparent }
+  50% { border-color: ${cssFormatColors.neonBlue} }
+`;
+
+const ComponentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+    animation: ${slideDown} 1s ease-out forwards;
+`;
+
+const TypedTitle = styled.h2`
+  font-family: 'Orbitron', sans-serif;
+  color: ${cssFormatColors.neonBlue};
+  text-align: center;
+  margin: 0;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-bottom: 10px;
+  animation: ${typeAnimation} 1s steps(40, end);
+  animation-delay: 1s;     /* Adds a 1-second delay before the animation starts */
+  width: 0;               /* Important: ensures the text starts hidden */
+  animation-fill-mode: forwards;  /* Keeps the final state after animation ends */
+    -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+/Edge */
+  user-select: none;  
+`;
+
 const SliderContainer = styled.div`
     position: relative;
     width: 200px;
@@ -18,7 +55,6 @@ const SliderContainer = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-        animation: ${slideDown} 1s ease-out forwards;
 `;
 
 const CircleTrack = styled.div`
@@ -91,7 +127,12 @@ const Value = styled.div`
     color: ${cssFormatColors.neonBlue};
     text-shadow: 0 0 10px ${cssFormatColors.neonBlue};
     font-family: 'Orbitron', sans-serif;
+          -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+/Edge */
+  user-select: none;   
 `;
+
 
 const MarkerLine = styled.div<{ angle: number }>`
     position: absolute;
@@ -116,6 +157,13 @@ const Marker = styled.div<{ angle: number }>`
     font-family: 'Orbitron', sans-serif;
 `;
 
+const MarkerValue = styled.div`
+      -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+/Edge */
+  user-select: none;    
+`;
+
 export const CircleSlider: React.FC<CircleSliderProps> = ({
                                                               min = 1,
                                                               max = 1000,
@@ -133,7 +181,7 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
         setIsDragging(false);
     };
 
-        useEffect(() => {
+    useEffect(() => {
         let startTime: number;
         const duration = 2000; // 2 seconds in milliseconds
         const startValue = 0;
@@ -201,32 +249,35 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
     const angle = progress * 360;
 
     return (
-        <SliderContainer ref={containerRef}>
-            <CircleTrack/>
-            <CircleProgress progress={progress}/>
-            <Handle
-                angle={angle}
-                onMouseDown={handleMouseDown}
-            >
-            </Handle>
-            <DottedInnerCircle/>
-            <Value>{value}</Value>
-            {[
-                {value: 0, angle: 0},
-                {value: 125, angle: 45},
-                {value: 250, angle: 90},
-                {value: 375, angle: 135},
-                // {value: 500, angle: 180},
-                {value: 625, angle: 225},
-                {value: 750, angle: 270},
-                {value: 875, angle: 315}
-            ].map(({value, angle}) => (
-                <React.Fragment key={value}>
-                    <Marker angle={angle}>
-                        {value}
-                    </Marker>
-                </React.Fragment>
-            ))}
-        </SliderContainer>
+    <ComponentWrapper>
+        <TypedTitle>Game Speed</TypedTitle>
+            <SliderContainer ref={containerRef}>
+                <CircleTrack/>
+                <CircleProgress progress={progress}/>
+                <Handle
+                    angle={angle}
+                    onMouseDown={handleMouseDown}
+                >
+                </Handle>
+                <DottedInnerCircle/>
+                <Value>{value}</Value>
+                {[
+                    {value: 0, angle: 0},
+                    {value: 125, angle: 45},
+                    {value: 250, angle: 90},
+                    {value: 375, angle: 135},
+                    // {value: 500, angle: 180},
+                    {value: 625, angle: 225},
+                    {value: 750, angle: 270},
+                    {value: 875, angle: 315}
+                ].map(({value, angle}) => (
+                    <React.Fragment key={value}>
+                        <Marker angle={angle}>
+                            <MarkerValue>{value}</MarkerValue>
+                        </Marker>
+                    </React.Fragment>
+                ))}
+            </SliderContainer>
+        </ComponentWrapper>
     );
 };

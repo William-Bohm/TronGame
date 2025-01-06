@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import styled, {keyframes} from 'styled-components';
-import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
+import {cssFormatColors, toRGBA, toHSLA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
 
@@ -10,7 +10,7 @@ interface FuturisticButtonProps {
 }
 
 
-const lineAnimationTime = 20;
+const lineAnimationTime = 11;
 
 
 // Then modify your ButtonContainer
@@ -55,25 +55,25 @@ const TextContainer = styled.div<TextContainerProps>`
     font-family: 'Orbitron', sans-serif;
     background: linear-gradient(
             90deg,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 0%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 25%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 75%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 100%
+            ${() => toRGBA(cssFormatColors.darkGrey, 1)} 0%,
+            ${() => toRGBA(cssFormatColors.darkGrey, 1)} 9%,
+            ${() => toRGBA(cssFormatColors.neonBlue, 0.5)} 50%,
+            ${() => toRGBA(cssFormatColors.darkGrey, 1)} 91%,
+            ${() => toRGBA(cssFormatColors.darkGrey, 1)} 100%
     );
     padding: ${props => props.isMobile ? '8px 8px' : '8px 8px'};
     min-width: ${props => props.isMobile ? '25vw' : '80vw'};
     width: fit-content;
-    white-space: nowrap;    margin: 0;
-    color: black;
+    white-space: nowrap;
+    margin: 0;
+    color: white;
     font-size: 1.2rem;
     transition: all 0.3s ease;
     clip-path: polygon(
             15% 0%,
-            85% 0%,
-            90% 35%,
+            90% 0%,
             85% 100%,
-            15% 100%,
-            10% 65%
+            10% 100%
     );
     //min-width: 200px;
 
@@ -83,10 +83,10 @@ const TextContainer = styled.div<TextContainerProps>`
         color: black;
         background: linear-gradient(
                 90deg,
-                ${() => toRGBA(cssFormatColors.neonBlue, 1)} 0%,
-                ${() => toRGBA(cssFormatColors.neonBlue, 1)} 25%,
-                ${() => toRGBA(cssFormatColors.neonBlue, 1)} 75%,
-                ${() => toRGBA(cssFormatColors.neonBlue, 1)} 100%
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 0%,
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 25%,
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 75%,
+                ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 100%
         );
     }
 `;
@@ -94,7 +94,7 @@ const TextContainer = styled.div<TextContainerProps>`
 const LeftCircleSVGContainer = styled.svg`
     position: absolute;
     left: 0;
-    top: 65%;
+    top: 5%;
     transform: translateY(-50%);
     width: 10px;
     height: 10px;
@@ -104,7 +104,7 @@ const LeftCircleSVGContainer = styled.svg`
 const RightCircleSVGContainer = styled.svg`
     position: absolute;
     right: 0;
-    top: 36%;
+    top: 90%;
     transform: translateY(-50%);
     width: 10px;
     height: 10px;
@@ -112,19 +112,18 @@ const RightCircleSVGContainer = styled.svg`
 `;
 
 const CircleMarker = styled.circle`
-    fill: none;
+    fill: ${cssFormatColors.neonBlue};
     stroke: ${() => toRGBA(cssFormatColors.neonBlue, 0.8)};;
     stroke-width: 2;
 `;
 
-const FuturisticButton: React.FC<FuturisticButtonProps> = ({
-                                                               text,
-                                                               onClick,
-                                                           }) => {
+const FuturisticButton2: React.FC<FuturisticButtonProps> = ({
+                                                                text,
+                                                                onClick,
+                                                            }) => {
     const isMobile = useIsMobile();
     const [isHovered, setIsHovered] = useState<boolean>(false);
     const [showLines, setShowLines] = useState<boolean>(false);
-
 
     // timer for lines
     useEffect(() => {
@@ -146,55 +145,30 @@ const FuturisticButton: React.FC<FuturisticButtonProps> = ({
             {showLines && (
                 <div>
                     <SVGContainer viewBox="0 0 100 100" preserveAspectRatio="none">
-                        {/*left*/}
-                        <BorderPath
-                            d={`
-            M 3 65
-            L 10 65
-            L 15 100
-            L 40 100
-          `}
-                        />
-                        <BorderPath
-                            d={`
-            M 11 55
-            L 15 10
-          `}
-                        />
-                        <BorderPath
-                            d={`
-            M 8 55
-            L 12 10
-          `}
-                        />
+<BorderPath
+    d={`
+        M 3 5
+        L 10 5
+        L 5 90
+        L 9 90
+        L 14 5
+    `}/>
                         {/*    right*/}
-
                         <BorderPath
                             d={`
-            M 97 35
-            L 90 35
-            L 85 0
-            L 60 0
-          `}
-                        />
-                        <BorderPath
-                            d={`
-            M 89 45
-            L 85 90
-          `}/>
-                        <BorderPath
-                            d={`
-            M 92 45
-            L 88 90
-          `}/>
-
+        M 97 90
+        L 90 90
+        L 95 10
+        L 91 10
+        L 86 90
+    `} />
 
                     </SVGContainer>
                     <LeftCircleSVGContainer viewBox="0 0 10 10">
-                        <CircleMarker cx="5" cy="5" r="3"/>
+                        <CircleMarker cx="5" cy="5" r="2"/>
                     </LeftCircleSVGContainer>
                     <RightCircleSVGContainer viewBox="0 0 10 10">
-                        <CircleMarker cx="5" cy="5" r="3"/>
+                        <CircleMarker cx="5" cy="5" r="2"/>
                     </RightCircleSVGContainer>
                 </div>
             )}
@@ -203,4 +177,4 @@ const FuturisticButton: React.FC<FuturisticButtonProps> = ({
         </ButtonContainer>
     );
 };
-export default FuturisticButton;
+export default FuturisticButton2;
