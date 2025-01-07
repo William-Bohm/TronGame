@@ -62,7 +62,13 @@ const TextContainer = styled.div<TextContainerProps>`
             ${() => toRGBA(cssFormatColors.darkGrey, 1)} 100%
     );
     padding: ${props => props.isMobile ? '8px 8px' : '8px 8px'};
-    min-width: ${props => props.isMobile ? '25vw' : '80vw'};
+    min-width: ${props => props.isMobile ? '25vw' : '60vw'};
+    @media (min-width: 750px) {
+        min-width: ${props => props.isMobile ? '25vw' : '50vw'};
+    }
+    @media (max-width: 450px) {
+        min-width: ${props => props.isMobile ? '25vw' : '80vw'};
+    }
     width: fit-content;
     white-space: nowrap;
     margin: 0;

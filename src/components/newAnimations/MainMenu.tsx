@@ -7,7 +7,6 @@ import Letter3D from "../animations/letters";
 import {useTronContext} from "../../context/GameContext";
 import styled, {ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "../../theme";
-import {SceneManager} from "./SceneManager";
 
 import {NeonMultiLine} from "./mainMenuLines/mainMenuLinesComponent";
 import {AnimatedLine, LineSegment} from "./mainMenuLines/newLines";
@@ -30,7 +29,7 @@ const SceneContainer = styled.div`
     height: 100vh;
 `;
 
-const SkipIntroButton = styled.button<{ fadeOut: boolean }>`
+const SkipIntroButton = styled.button`
     position: absolute;
     top: 20px;
     right: 20px;
@@ -42,9 +41,8 @@ const SkipIntroButton = styled.button<{ fadeOut: boolean }>`
     padding: 10px 20px;
     font-size: 1.2rem;
     cursor: pointer;
-    transition: background 0.2s ease-in-out, opacity 0.5s ease-in-out;
+    transition: background 0.2s ease-in-out;
     z-index: 1000;
-    opacity: ${props => props.fadeOut ? 0 : 1};
 
     &:hover {
         background: ${({theme}) => theme.colors.primary};
@@ -157,39 +155,63 @@ const glitchAnimation = keyframes`
         text-shadow: none;
     }
     20% {
-        opacity: 0.8;
-        transform: translate(-50%, -50%) skew(4deg);
-        text-shadow: 2px 2px ${cssFormatColors.neonOrange}, -2px -2px ${cssFormatColors.neonBlue};
+        opacity: 0.7;
+        transform: translate(-48%, -50%) skew(15deg);
+        text-shadow: 4px 4px ${cssFormatColors.neonOrange}, -4px -4px ${cssFormatColors.neonBlue};
     }
     21% {
         opacity: 1;
-        transform: translate(-50%, -50%) skew(0deg);
+        transform: translate(-52%, -50%) skew(-12deg);
+        text-shadow: -5px 3px ${cssFormatColors.neonOrange}, 3px -5px ${cssFormatColors.neonBlue};
     }
-    30% {
-        opacity: 0.9;
-        transform: translate(-50%, -50%) skew(-4deg);
-        text-shadow: -2px 2px ${cssFormatColors.neonOrange}, 2px -2px ${cssFormatColors.neonBlue};
-    }
-    35% {
+    22% {
         opacity: 1;
         transform: translate(-50%, -50%) skew(0deg);
         text-shadow: none;
+    }
+    60% {
+        opacity: 0.7;
+        transform: translate(-52%, -50%) skew(-15deg);
+        text-shadow: -4px 4px ${cssFormatColors.neonOrange}, 4px -4px ${cssFormatColors.neonBlue};
+    }
+    61% {
+        opacity: 1;
+        transform: translate(-48%, -50%) skew(12deg);
+        text-shadow: 5px 3px ${cssFormatColors.neonOrange}, -3px -5px ${cssFormatColors.neonBlue};
+    }
+    62% {
+       opacity: 1;
+       transform: translate(-50%, -50%) skew(0deg);
+       text-shadow: none;
+    }
+`;
+
+
+const moveUpAnimation = keyframes`
+    0%, 50% {
+        top: 50%;
+        left: 50%;
+    }
+    100% {
+        top: 10%;
+        left: 50%;
     }
 `;
 
 const CenteredText = styled.div`
     position: absolute;
     color: ${cssFormatColors.neonBlue};
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     text-align: center;
     font-size: 62px;
     font-weight: 400;
     font-family: 'Orbitron', sans-serif;
-    animation: ${glitchAnimation} 2s ease-in-out;
-    animation-iteration-count: 3; // Will run 3 times
-
+    transform: translate(-50%, -50%);
+    
+    // Combine both animations
+    animation: 
+        ${glitchAnimation} 2s linear,
+        ${moveUpAnimation} 4s ease-in-out forwards;
+        
     @media (max-width: 1024px) {
         font-size: 51px;
         letter-spacing: 1px;
@@ -234,58 +256,18 @@ const YourComponent = () => {
     // ...rest of component
 };
 
-const ThreeScene3: React.FC = () => {
+const MainMenu: React.FC = () => {
     const mountRef = useRef<HTMLDivElement>(null);
-    const sceneManagerRef = useRef<SceneManager | null>(null);
     const [currentAnimation, setCurrentAnimation] = useState<'intro' | 'mainMenu' | 'game'>('intro');
+    const [lineGroups, setLineGroups] = useState<{ [key: string]: LineSegment[] }>({});
     const [gameSpeed, setGameSpeed] = useState(500);
     const isMobile = useIsMobile();
-    const [buttonFadeOut, setButtonFadeOut] = useState(false);
-
+    const [linesVisible, setLinesVisible] = useState(false);
 
     const {
         setIntroComplete,
+        introComplete
     } = useTronContext();
-
-
-useEffect(() => {
-    console.log('ThreeScene3 mounted');
-    if (!mountRef.current) return;
-    const sceneManager = new SceneManager(mountRef.current);
-    sceneManagerRef.current = sceneManager;
-
-    sceneManager.setAnimationChangeCallback((newAnimation) => {
-        setCurrentAnimation(newAnimation);
-    });
-
-    let lastTime = 0;
-    const animate = (time: number) => {
-        const deltaTime = (time - lastTime) / 1000;
-        lastTime = time;
-        sceneManager.update(deltaTime);
-        requestAnimationFrame(animate);
-
-        // Start fade out at 11 seconds (slightly before skip)
-        if (sceneManager.elapsedTime > 10) {
-            setButtonFadeOut(true);
-        }
-
-        // Skip intro at 11.4 seconds
-        if (sceneManager.elapsedTime > 11.4) {
-            skipIntro();
-        }
-    };
-
-    requestAnimationFrame(animate);
-
-    return () => {
-        if (sceneManagerRef.current) {
-            console.log('cleaning up now!')
-            sceneManagerRef.current?.cleanup();
-        }
-    };
-}, []);
-
 
     const lineConfigs: LineSegmentGroup[] = [
         {
@@ -469,81 +451,110 @@ useEffect(() => {
     ];
 
 
-    const skipIntro = () => {
-        setIntroComplete(true);
-        sceneManagerRef.current?.cleanup()
-    };
+    useEffect(() => {
+        const updateLineSegments = () => {
+            const screenHeight = window.innerHeight;
+            const screenWidth = window.innerWidth;
+
+            const newGroups = lineConfigs.reduce((acc, group) => {
+                const convertedSegments = group.segments.map(segment => ({
+                    start: {
+                        x: (segment.start.xPercent / 100) * screenWidth,
+                        y: (segment.start.yPercent / 100) * screenHeight
+                    },
+                    end: {
+                        x: (segment.end.xPercent / 100) * screenWidth,
+                        y: (segment.end.yPercent / 100) * screenHeight
+                    },
+                }));
+
+                acc[group.id] = convertedSegments;
+                return acc;
+            }, {} as { [key: string]: LineSegment[] });
+
+            setLineGroups(newGroups);
+        };
+
+        updateLineSegments();
+        window.addEventListener('resize', updateLineSegments);
+        return () => window.removeEventListener('resize', updateLineSegments);
+    }, []);
+
+    useEffect(() => {
+    //     timeout 1 seconds set lines to visible
+        setTimeout(() => {
+            setLinesVisible(true);
+        }, 1000);
+    }, []);
+
 
     const [isDarkMode, setIsDarkMode] = useState(true);
 
     return (
         <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
             <AppContainer>
-                <SceneContainer>
-                    {/* Three.js scene */}
-                    <div ref={mountRef} style={{width: '100%', height: '100%'}}/>
+                {/* UI Overlay */}
+                <UIOverlay>
+                    {/*{currentAnimation === 'intro' && (*/}
+                    {/*    <ButtonWrapper>*/}
+                    {/*        <SkipIntroButton*/}
+                    {/*            onClick={() => sceneManagerRef.current?.skipIntro()}*/}
+                    {/*            disabled={false}*/}
+                    {/*        >*/}
+                    {/*            Skip Intro bud*/}
+                    {/*        </SkipIntroButton>*/}
+                    {/*    </ButtonWrapper>*/}
+                    {/*)}*/}
 
-                    {/* UI Overlay */}
-                    {/*<UIOverlay>*/}
-                    {currentAnimation === 'intro' && (
-                        <SkipIntroButton
-                            onClick={() => skipIntro()}
-                            disabled={false}
-                            fadeOut={buttonFadeOut}
-                        >
-                            Skip Intro bud
-                        </SkipIntroButton>
+                    {isMobile && linesVisible && (
+                        <>
+                            {lineConfigs.map(config => (
+                                <AnimatedLine
+                                    segments={lineGroups[config.id] || []}
+                                    color={config.color}
+                                    thickness={config.thickness}
+                                />
+                            ))}
+                        </>
                     )}
-                    {/*    {isMobile && (*/}
-                    {/*        <>*/}
-                    {/*            {lineConfigs.map(config => (*/}
-                    {/*                <AnimatedLine*/}
-                    {/*                    segments={lineGroups[config.id] || []}*/}
-                    {/*                    color={config.color}*/}
-                    {/*                    thickness={config.thickness}*/}
-                    {/*                />*/}
-                    {/*            ))}*/}
-                    {/*        </>*/}
-                    {/*    )}*/}
 
-                    {/*    <CenteredText>Tronvolution</CenteredText>*/}
+                    <CenteredText>Tronvolution</CenteredText>
 
 
-                    {/*    <UIColumnsWrapper>*/}
-                    {/*        /!* Left Column *!/*/}
-                    {/*        <LeftColumn>*/}
-                    {/*            /!* Put your left side content here *!/*/}
-                    {/*        </LeftColumn>*/}
+                    {/*<UIColumnsWrapper>*/}
+                    {/*    /!* Left Column *!/*/}
+                    {/*    <LeftColumn>*/}
+                    {/*        /!* Put your left side content here *!/*/}
+                    {/*    </LeftColumn>*/}
 
-                    {/*        /!* Right Column *!/*/}
-                    {/*        <RightColumn>*/}
-                    {/*            <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>*/}
-                    {/*            <GameBoardSelector*/}
-                    {/*                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."*/}
-                    {/*                onClick={() => console.log('Button clicked!')}*/}
-                    {/*            />*/}
-                    {/*        </RightColumn>*/}
-                    {/*    </UIColumnsWrapper>*/}
+                    {/*    /!* Right Column *!/*/}
+                    {/*    <RightColumn>*/}
+                    {/*        <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>*/}
+                    {/*        <GameBoardSelector*/}
+                    {/*            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."*/}
+                    {/*            onClick={() => console.log('Button clicked!')}*/}
+                    {/*        />*/}
+                    {/*    </RightColumn>*/}
+                    {/*</UIColumnsWrapper>*/}
 
 
-                    {/*    <StartButtonsAbsoluteWrapper>*/}
-                    {/*        <StartButtonsRelativeWrapper>*/}
-                    {/*            <FuturisticButton2*/}
-                    {/*                text="How to Play"*/}
-                    {/*                onClick={() => console.log('Button clicked!')}*/}
-                    {/*            />*/}
-                    {/*            <FuturisticButton*/}
-                    {/*                text="Start Game"*/}
-                    {/*                onClick={() => console.log('Button clicked!')}*/}
-                    {/*            />*/}
-                    {/*        </StartButtonsRelativeWrapper>*/}
-                    {/*    </StartButtonsAbsoluteWrapper>*/}
+                    {/*<StartButtonsAbsoluteWrapper>*/}
+                    {/*    <StartButtonsRelativeWrapper>*/}
+                    {/*        <FuturisticButton2*/}
+                    {/*            text="How to Play"*/}
+                    {/*            onClick={() => console.log('Button clicked!')}*/}
+                    {/*        />*/}
+                    {/*        <FuturisticButton*/}
+                    {/*            text="Start Game"*/}
+                    {/*            onClick={() => console.log('Button clicked!')}*/}
+                    {/*        />*/}
+                    {/*    </StartButtonsRelativeWrapper>*/}
+                    {/*</StartButtonsAbsoluteWrapper>*/}
 
-                    {/*</UIOverlay>*/}
-                </SceneContainer>
+                </UIOverlay>
             </AppContainer>
         </ThemeProvider>
     );
 };
 
-export default ThreeScene3;
+export default MainMenu;

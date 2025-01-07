@@ -62,19 +62,20 @@ interface LetterOptions {
 }
 
 const lettersData: LetterOptions[] = [
-    createLetterOptions('T', -23),
-    createLetterOptions('r', -18),
-    createLetterOptions('o', -14),
+    createLetterOptions('T', -22.7),
+    createLetterOptions('r', -17.4),
+    createLetterOptions('o', -13.9),
     createLetterOptions('n', -9),
     createLetterOptions('v', -4),
-    createLetterOptions('o', 1),
+    createLetterOptions('o', 1.2),
     createLetterOptions('l', 6),
     createLetterOptions('u', 8),
-    createLetterOptions('t', 13),
+    createLetterOptions('t', 13.1),
     createLetterOptions('i', 16),
-    createLetterOptions('o', 17),
-    createLetterOptions('n', 22),
+    createLetterOptions('o', 17.4),
+    createLetterOptions('n', 22.2),
 ];
+
 
 const _NOISE_GLSL = `
 //
@@ -195,7 +196,6 @@ float FBM(vec3 p) {
 `;
 
 
-
 function createLetterOptions(
     letter: string,
     xPosition: number,
@@ -208,14 +208,12 @@ function createLetterOptions(
             (Math.random() - 0.5) * 100,
             -100 // Adjust as needed
         ),
-        endPosition: new THREE.Vector3(xPosition, 0, zPosition),
+        endPosition: new THREE.Vector3(xPosition, -2.7, zPosition),
         startTime: 0, // All letters start at the same time
         initialDuration: 1, // Random duration between 2 and 3 seconds
         duration: 1 + Math.random(),    // Random duration between 3 and 5 seconds
     };
 }
-
-
 
 export class SceneManager {
     private currentViewportType: 'mobile' | 'tablet' | 'desktop' = 'desktop';
@@ -228,9 +226,10 @@ export class SceneManager {
     private introLineManager: LineAnimationManager;
     private logoManager: LogoManager;
     private cameraSpeed: number = 25;
-    private elapsedTime: number = 0;
+    public elapsedTime: number = 0;
     private introComplete: boolean = false;
     private startTime: number;
+
 
     constructor(container: HTMLDivElement) {
         console.log("initializing scene");
@@ -274,9 +273,10 @@ export class SceneManager {
 
         this.introLineManager = new LineAnimationManager(this.scene, waypoints, startTimes);
         this.logoManager = new LogoManager(this.scene, lettersData, 0);  // start time is supposed to be 7.3
-         // resize controller
+        // resize controller
         window.addEventListener('resize', this.handleWindowResize.bind(this));
         this.handleWindowResize();
+
     }
 
     private getViewportType(width: number): 'mobile' | 'tablet' | 'desktop' {
@@ -333,7 +333,7 @@ export class SceneManager {
                 this.updateIntro(deltaTime);
                 break;
             case 'mainMenu':
-                this.updateMainMenu(deltaTime);
+                // this.updateMainMenu(deltaTime);
                 break;
         }
 
@@ -361,7 +361,7 @@ export class SceneManager {
         // logo animation
         switch (this.logoManager.currentAnimation) {
             case 'unInitialized': {
-                if (this.elapsedTime > 7.2) {
+                if (this.elapsedTime > 7.3) { // 7.3
                     this.logoManager.initializeLetters(this.camera);
                     this.logoManager.currentAnimation = 'intro';
                 }
@@ -369,64 +369,38 @@ export class SceneManager {
             }
             case 'intro': {
                 this.logoManager.updateLettersIntro(deltaTime, this.cameraSpeed, this.camera);
+                // if (this.elapsedTime > 4) {
+                //     setIntroComplete(true);
+                // }
 
-                if (this.elapsedTime > 11.3 && this.logoManager.currentPosition != LogoPosition.TOP_MIDDLE) {
-                    this.cameraSpeed = 0;
-                    this.logoManager.currentPosition = LogoPosition.TOP_MIDDLE;
-                    this.logoManager.resizeLogo(this.camera, 2);
-                }
+                // if (this.elapsedTime > 11.3 && this.logoManager.currentPosition != LogoPosition.TOP_MIDDLE) {
+                //     this.cameraSpeed = 0;
+                //     this.logoManager.currentPosition = LogoPosition.TOP_MIDDLE;
+                //     this.logoManager.resizeLogo(this.camera, 2);
+                // }
 
-                if (this.elapsedTime > 12) {
-                    if (!this.logoManager.isUnderlineVisible) {
-                        this.logoManager.toggleUnderline();
-                    }
-                    if (!this.logoManager.isUnderlineSidelinesVisible && this.elapsedTime > 14) {
-                        this.logoManager.toggleUnderlineSidelines();
-                    }
-
-                    this.logoManager.updateLogoUnderline(deltaTime, this.cameraSpeed);
-                }
-
-                if (this.elapsedTime > 20) {
-                    console.log('intro done');
-                    this.elapsedTime = 0;
-                    this.currentAnimation = 'mainMenu';
-                    this.logoManager.currentAnimation = 'mainMenu';
-                    this.introComplete = true;
-                    this.cameraSpeed = 0;
-                    this.introLineManager.cleanup();
-                }
+                // if (this.elapsedTime > 12) {
+                //     if (!this.logoManager.isUnderlineVisible) {
+                //         this.logoManager.toggleUnderline();
+                //     }
+                //     if (!this.logoManager.isUnderlineSidelinesVisible && this.elapsedTime > 14) {
+                //         this.logoManager.toggleUnderlineSidelines();
+                //     }
+                //
+                //     this.logoManager.updateLogoUnderline(deltaTime, this.cameraSpeed);
+                // }
+                //
+                // if (this.elapsedTime > 20) {
+                //     console.log('intro done');
+                //     this.elapsedTime = 0;
+                //     this.currentAnimation = 'mainMenu';
+                //     this.logoManager.currentAnimation = 'mainMenu';
+                //     this.introComplete = true;
+                //     this.cameraSpeed = 0;
+                //     this.introLineManager.cleanup();
+                // }
             }
         }
-    }
-
-    public skipIntro(): void {
-        this.currentAnimation = 'mainMenu';
-        this.cameraSpeed = 0;
-        console.log('skipping intro');
-        this.introComplete = true;
-        // handle lines
-        this.introLineManager.cleanup();
-
-        // handle logo
-        this.logoManager.skipIntroAnimation(this.camera);
-
-        // handle underlines
-        // if (!this.logoManager.isUnderlineVisible) {
-        //     this.logoManager.toggleUnderline();
-        // }
-        // if (!this.logoManager.isUnderlineSidelinesVisible && this.elapsedTime > 14) {
-        //     this.logoManager.toggleUnderlineSidelines();
-        // }
-        // this.logoManager.updateLogoUnderline(100, this.cameraSpeed);
-        //
-        // this.currentAnimation = 'mainMenu';
-        // this.logoManager.currentAnimation = 'mainMenu';
-        // this.introComplete = true;
-        // this.cameraSpeed = 0;
-        this.logoManager.currentAnimation = 'mainMenu';
-
-
     }
 
     private updateCamera(deltaTime: number): void {

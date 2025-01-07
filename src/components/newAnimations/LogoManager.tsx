@@ -45,7 +45,8 @@ export class LogoManager extends AnimationManager {
         this.letterOptions = letterOptions;
         this.startTime = startTime;
     }
-        private getScreenCoordinates(position: LogoPosition): { x: number, y: number, z: number } {
+
+    private getScreenCoordinates(position: LogoPosition): { x: number, y: number, z: number } {
         switch (position) {
             case LogoPosition.TOP_MIDDLE:
                 return {
@@ -85,6 +86,14 @@ export class LogoManager extends AnimationManager {
             coords.z
         );
         console.log('World pos: ', worldPos);
+        const screenWidth = window.innerWidth;
+        if (screenWidth < 768) {
+            worldPos.x -= 0.4; // Adjust this value as needed for mobile
+        } else if (screenWidth < 1024) {
+            worldPos.x -= 0.6; // Adjust this value as needed for tablets
+        }
+
+
         this.moveToPosition(worldPos, speed);
     }
 
@@ -223,7 +232,6 @@ export class LogoManager extends AnimationManager {
     }
 
 
-
     private createUnderline(): void {
         // Calculate total width of letters
         const bbox = new THREE.Box3().setFromObject(this.lettersGroup);
@@ -231,11 +239,11 @@ export class LogoManager extends AnimationManager {
 
         // Create underline
         const underlineVector = new THREE.Vector3(2, -2, -20);
-        const leftLineVector = new THREE.Vector3(-width * 2 / 3 - 4.5 , 2, -20);
+        const leftLineVector = new THREE.Vector3(-width * 2 / 3 - 4.5, 2, -20);
         const rightLineVector = new THREE.Vector3(width * 2 / 3 + 8.5, 2, -20);
-        const underline = new UnderlineMesh(this.lettersGroup, width*2, underlineVector, 100, materials.neonBlue);
-        const leftLine = new UnderlineMesh(this.lettersGroup, width * 2/ 5, leftLineVector, 20, materials.neonOrange);
-        const rightLine = new UnderlineMesh(this.lettersGroup, width * 2  / 5, rightLineVector, 20, materials.neonOrange);
+        const underline = new UnderlineMesh(this.lettersGroup, width * 2, underlineVector, 100, materials.neonBlue);
+        const leftLine = new UnderlineMesh(this.lettersGroup, width * 2 / 5, leftLineVector, 20, materials.neonOrange);
+        const rightLine = new UnderlineMesh(this.lettersGroup, width * 2 / 5, rightLineVector, 20, materials.neonOrange);
         this.underlines.push(underline);
         this.underlineSidelines.push(leftLine);
         this.underlineSidelines.push(rightLine);

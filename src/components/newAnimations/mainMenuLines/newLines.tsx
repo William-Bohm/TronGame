@@ -1,4 +1,6 @@
 // types.ts
+import {colors, cssFormatColors, toRGBA} from "../../../threeJSMeterials";
+
 interface Point {
     x: number;
     y: number;
@@ -41,8 +43,9 @@ const LineSegmentSVG = styled.line<{
             props.dashLength - props.progress * props.dashLength};
     opacity: ${props => props.isVisible ? 1 : 0};
     visibility: ${props => props.isVisible ? 'visible' : 'hidden'};
-    stroke: #FF6B00;
-    filter: drop-shadow(0 0 8px #FF6B00) drop-shadow(0 0 12px rgba(255, 107, 0, 0.8));
+    stroke: ${cssFormatColors.neonBlue};
+
+    filter: drop-shadow(0 0 8px ${cssFormatColors.neonBlue}) drop-shadow(0 0 12px ${() => toRGBA(cssFormatColors.neonBlue, 0.8)});
 `;
 
 export const AnimatedLine: React.FC<AnimatedLineProps> = ({
@@ -50,6 +53,7 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
                                                               color = '#000000',
                                                               thickness = 2,
                                                           }) => {
+    const [isMounted, setIsMounted] = useState(false);
     const [visibleSegments, setVisibleSegments] = useState<boolean[]>(
         new Array(segments.length).fill(false)
     );
@@ -67,7 +71,7 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
     }
 
 // 2. Suppose we define a "speed" in px/ms. For example:
-    const SPEED_PX_PER_MS = 0.4; // 0.2 px/ms => 200 px/s
+    const SPEED_PX_PER_MS = 1; // 0.2 px/ms => 200 px/s
 
 // ...
 // Inside your animation callback
@@ -116,20 +120,42 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
 
 
     useEffect(() => {
+        // Reset states first
         setVisibleSegments(new Array(segments.length).fill(false));
         setSegmentProgress(new Array(segments.length).fill(0));
         animatingSegmentRef.current = 0;
         startTimeRef.current = 0;
 
-        // Start first segment
-        setVisibleSegments(prev => {
-            const newState = [...prev];
-            newState[0] = true;
-            return newState;
-        });
-        requestAnimationFrame(animate);
-    }, [segments, animate]);
+        // Set mounted state and start animation in the next frame
+        setIsMounted(true);
 
+        return () => {
+            setIsMounted(false);
+        };
+    }, [segments]);
+
+    useEffect(() => {
+        if (isMounted) {
+            setVisibleSegments(prev => {
+                const newState = [...prev];
+                newState[0] = true;
+                return newState;
+            });
+            requestAnimationFrame(animate);
+        }
+    }, [isMounted, animate]);
+    if (!isMounted) {
+        return (
+            <SVGContainer>
+                <svg
+                    width="100%"
+                    height="100%"
+                    style={{position: 'absolute', top: 0, left: 0}}
+                    preserveAspectRatio="none"
+                />
+            </SVGContainer>
+        );
+    }
     return (
         <SVGContainer>
             <svg

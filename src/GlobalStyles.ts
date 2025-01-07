@@ -1,5 +1,6 @@
 // src/components/GlobalStyles.ts
 import { createGlobalStyle } from 'styled-components';
+import {colors, cssFormatColors} from "./threeJSMeterials";
 
 const GlobalStyles = createGlobalStyle`
   /* Reset some default styles */
@@ -11,7 +12,7 @@ const GlobalStyles = createGlobalStyle`
 
   body {
     font-family: ${({ theme }) => theme.fonts.main};
-    background-color: ${({ theme }) => theme.colors.background};
+    background-color: ${({ theme }) => cssFormatColors.darkGrey};
     color: ${({ theme }) => theme.colors.text};
     line-height: 1.6;
     margin: 0;
