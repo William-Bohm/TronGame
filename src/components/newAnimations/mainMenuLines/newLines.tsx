@@ -21,7 +21,8 @@ interface AnimatedLineProps {
 
 // AnimatedLine.tsx
 import styled, {keyframes} from 'styled-components';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useId, useRef, useState} from 'react';
+import AnimationManager from "./MainMenuAnimationManager";
 
 const SVGContainer = styled.div`
     position: absolute;
@@ -37,6 +38,7 @@ const LineSegmentSVG = styled.line<{
     dashLength: number;
     progress: number;
     isVisible: boolean;
+    isComplete: boolean;
 }>`
     stroke-dasharray: ${(props) => props.dashLength};
     stroke-dashoffset: ${(props) =>
@@ -44,8 +46,11 @@ const LineSegmentSVG = styled.line<{
     opacity: ${props => props.isVisible ? 1 : 0};
     visibility: ${props => props.isVisible ? 'visible' : 'hidden'};
     stroke: ${cssFormatColors.neonBlue};
-
-    filter: drop-shadow(0 0 8px ${cssFormatColors.neonBlue}) drop-shadow(0 0 12px ${() => toRGBA(cssFormatColors.neonBlue, 0.8)});
+    
+    filter: ${props => props.isComplete ? 
+        `drop-shadow(0 0 8px ${cssFormatColors.neonBlue}) drop-shadow(0 0 12px ${toRGBA(cssFormatColors.neonBlue, 0.8)})` : 
+        'none'};
+    transition: filter 0.3s ease; /* Optional: smooth transition when filter is applied */
 `;
 
 export const AnimatedLine: React.FC<AnimatedLineProps> = ({
@@ -57,11 +62,14 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
     const [visibleSegments, setVisibleSegments] = useState<boolean[]>(
         new Array(segments.length).fill(false)
     );
+        const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+
     const [segmentProgress, setSegmentProgress] = useState<number[]>(
         new Array(segments.length).fill(0)
     );
     const animatingSegmentRef = useRef<number>(0);
     const startTimeRef = useRef<number>(0);
+    const idRef = useRef<string>(useId());
 
 // 1. Helper to get length of a segment
     function getSegmentLength(segment: LineSegment) {
@@ -81,7 +89,10 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
         }
 
         const currentSegment = animatingSegmentRef.current;
-        if (currentSegment >= segments.length) return;
+        if (currentSegment >= segments.length) {
+            AnimationManager.getInstance().removeAnimation(idRef.current);
+            return;
+        }
 
         // figure out how long the current segment is
         const length = getSegmentLength(segments[currentSegment]);
@@ -99,38 +110,37 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
             return newProgress;
         });
 
-        if (progress < 1) {
-            // still animating this segment
-            requestAnimationFrame(animate);
-        } else {
-            // done with this segment
+        if (progress >= 1) {
+                     if (animatingSegmentRef.current === segments.length - 1) {
+                // Last segment is complete
+                setIsAnimationComplete(true);
+            }
             startTimeRef.current = 0;
             animatingSegmentRef.current++;
+
             if (animatingSegmentRef.current < segments.length) {
-                // show next segment and animate it
                 setVisibleSegments(prev => {
                     const newState = [...prev];
                     newState[animatingSegmentRef.current] = true;
                     return newState;
                 });
-                requestAnimationFrame(animate);
+            } else {
+                AnimationManager.getInstance().removeAnimation(idRef.current);
             }
         }
     }, [segments]);
 
 
-    useEffect(() => {
-        // Reset states first
+   useEffect(() => {
         setVisibleSegments(new Array(segments.length).fill(false));
         setSegmentProgress(new Array(segments.length).fill(0));
         animatingSegmentRef.current = 0;
         startTimeRef.current = 0;
-
-        // Set mounted state and start animation in the next frame
         setIsMounted(true);
 
         return () => {
             setIsMounted(false);
+            AnimationManager.getInstance().removeAnimation(idRef.current);
         };
     }, [segments]);
 
@@ -141,9 +151,10 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
                 newState[0] = true;
                 return newState;
             });
-            requestAnimationFrame(animate);
+            AnimationManager.getInstance().addAnimation(idRef.current, animate);
         }
     }, [isMounted, animate]);
+
     if (!isMounted) {
         return (
             <SVGContainer>
@@ -182,6 +193,7 @@ export const AnimatedLine: React.FC<AnimatedLineProps> = ({
                             dashLength={length}
                             progress={segmentProgress[index]}
                             isVisible={visibleSegments[index]}
+                            isComplete={isAnimationComplete}
                         />
                     );
                 })}

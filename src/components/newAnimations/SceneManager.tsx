@@ -428,5 +428,8 @@ export class SceneManager {
         this.introLineManager.cleanup();
         this.logoManager.cleanup();
         this.renderer.dispose();
+        console.log('Scene cleanup complete');
+        console.log('Scene cleanup complete');
+        console.log('Scene cleanup complete');
     }
 }

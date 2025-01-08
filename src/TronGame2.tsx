@@ -11,7 +11,7 @@ import styled from 'styled-components';
 import Controls from "./components/Controls";
 import './TronGame.css';
 import CubeRain from "./components/animations/fallingCubes";
-import MainMenu from "./components/newAnimations/MainMenu";
+import MainMenu from "./components/newAnimations/mainMenuLines/MainMenu";
 import ThreeScene3 from "./components/newAnimations/ThreeScene3";
 
 const AppContainer = styled.div`
@@ -102,7 +102,7 @@ const TronGame2: React.FC = () => {
       <AppContainer>
         <GlobalStyles />
           {/*<CubeRain/>*/}
-        {!introComplete ? (
+        {introComplete ? (
             <div>
                 <ThreeScene3/>
             </div>

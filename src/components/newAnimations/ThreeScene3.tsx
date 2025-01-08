@@ -1,21 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
-import * as THREE from 'three';
-import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js';
-import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import Letter3D from "../animations/letters";
 import {useTronContext} from "../../context/GameContext";
 import styled, {ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "../../theme";
 import {SceneManager} from "./SceneManager";
-
-import {NeonMultiLine} from "./mainMenuLines/mainMenuLinesComponent";
-import {AnimatedLine, LineSegment} from "./mainMenuLines/newLines";
-import FuturisticButton from "./components/SciFiComponents/SciFiButton1";
-import {CircleSlider} from "./components/SciFiComponents/CircleSelector";
-import FuturisticButton2 from "./components/SciFiComponents/SciFitButton2";
-import GameBoardSelector from "./components/SciFiComponents/GameBoardSelector";
-
 
 const AppContainer = styled.div`
     display: flex;
@@ -282,6 +269,7 @@ useEffect(() => {
         if (sceneManagerRef.current) {
             console.log('cleaning up now!')
             sceneManagerRef.current?.cleanup();
+            sceneManagerRef.current = null;
         }
     };
 }, []);
@@ -471,7 +459,9 @@ useEffect(() => {
 
     const skipIntro = () => {
         setIntroComplete(true);
-        sceneManagerRef.current?.cleanup()
+        setTimeout(() => {
+            sceneManagerRef.current?.cleanup()
+        }, 9000);
     };
 
     const [isDarkMode, setIsDarkMode] = useState(true);

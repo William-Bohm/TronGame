@@ -1,19 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
-import * as THREE from 'three';
-import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js';
-import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import Letter3D from "../animations/letters";
-import {useTronContext} from "../../context/GameContext";
+import {useTronContext} from "../../../context/GameContext";
 import styled, {ThemeProvider} from "styled-components";
-import {darkTheme, lightTheme} from "../../theme";
-
-import {NeonMultiLine} from "./mainMenuLines/mainMenuLinesComponent";
-import {AnimatedLine, LineSegment} from "./mainMenuLines/newLines";
-import FuturisticButton from "./components/SciFiComponents/SciFiButton1";
-import {CircleSlider} from "./components/SciFiComponents/CircleSelector";
-import FuturisticButton2 from "./components/SciFiComponents/SciFitButton2";
-import GameBoardSelector from "./components/SciFiComponents/GameBoardSelector";
+import {darkTheme, lightTheme} from "../../../theme";
+import {AnimatedLine, LineSegment} from "./newLines";
 
 
 const AppContainer = styled.div`
@@ -113,8 +102,10 @@ const UIColumnsWrapper = styled.div`
     height: 80%;
     @media (max-width: 1000px) {
         left: 0;
-        width: 100%;
-
+        width: 100vw;
+        height: 90%;
+        top: 10%;
+        flex-direction: column;
     }
     display: flex;
     justify-content: space-between;
@@ -124,6 +115,9 @@ const UIColumnsWrapper = styled.div`
 const LeftColumn = styled.div`
     position: relative;
     width: 50%; // Adjust width as needed
+    @media (max-width: 1000px) {
+        width: 100%;
+    }
     height: 100%;
     padding: 20px;
     pointer-events: auto; // Re-enable pointer events for the UI elements
@@ -136,6 +130,9 @@ const RightColumn = styled.div`
     width: 50%; // Adjust width as needed
     height: 100%;
     padding: 20px;
+        @media (max-width: 1000px) {
+        width: 100%;
+    }
     pointer-events: auto; // Re-enable pointer events for the UI elements
     border: 2px solid ${({theme}) => theme.colors.primary};
     //justify-content: space-between;
@@ -145,7 +142,12 @@ const RightColumn = styled.div`
 `;
 
 import {keyframes} from 'styled-components';
-import {cssFormatColors} from "../../threeJSMeterials";
+import {cssFormatColors} from "../../../threeJSMeterials";
+import GameBoardSelector from "../components/SciFiComponents/GameBoardSelector";
+import {CircleSlider} from "../components/SciFiComponents/CircleSelector";
+import FuturisticButton from "../components/SciFiComponents/SciFiButton1";
+import FuturisticButton2 from "../components/SciFiComponents/SciFitButton2";
+import PlayerSelector from "../components/SciFiComponents/PlayerSelector";
 
 // Create the glitch animation
 const glitchAnimation = keyframes`
@@ -180,9 +182,9 @@ const glitchAnimation = keyframes`
         text-shadow: 5px 3px ${cssFormatColors.neonOrange}, -3px -5px ${cssFormatColors.neonBlue};
     }
     62% {
-       opacity: 1;
-       transform: translate(-50%, -50%) skew(0deg);
-       text-shadow: none;
+        opacity: 1;
+        transform: translate(-50%, -50%) skew(0deg);
+        text-shadow: none;
     }
 `;
 
@@ -206,12 +208,11 @@ const CenteredText = styled.div`
     font-weight: 400;
     font-family: 'Orbitron', sans-serif;
     transform: translate(-50%, -50%);
-    
+
     // Combine both animations
-    animation: 
-        ${glitchAnimation} 2s linear,
-        ${moveUpAnimation} 4s ease-in-out forwards;
-        
+    animation: ${glitchAnimation} 2s linear,
+    ${moveUpAnimation} 4s ease-in-out forwards;
+
     @media (max-width: 1024px) {
         font-size: 51px;
         letter-spacing: 1px;
@@ -263,6 +264,7 @@ const MainMenu: React.FC = () => {
     const [gameSpeed, setGameSpeed] = useState(500);
     const isMobile = useIsMobile();
     const [linesVisible, setLinesVisible] = useState(false);
+    const [controlsVisible, setControlsVisible] = useState(false);
 
     const {
         setIntroComplete,
@@ -367,6 +369,7 @@ const MainMenu: React.FC = () => {
                 },
             ]
         },
+
         {
             id: 'mirroredLine1',
             color: '#007bff',
@@ -481,10 +484,13 @@ const MainMenu: React.FC = () => {
     }, []);
 
     useEffect(() => {
-    //     timeout 1 seconds set lines to visible
+        //     timeout 1 seconds set lines to visible
         setTimeout(() => {
             setLinesVisible(true);
         }, 1000);
+        setTimeout(() => {
+            setControlsVisible(true);
+        }, 3500);
     }, []);
 
 
@@ -506,50 +512,57 @@ const MainMenu: React.FC = () => {
                     {/*    </ButtonWrapper>*/}
                     {/*)}*/}
 
-                    {isMobile && linesVisible && (
-                        <>
-                            {lineConfigs.map(config => (
-                                <AnimatedLine
-                                    segments={lineGroups[config.id] || []}
-                                    color={config.color}
-                                    thickness={config.thickness}
-                                />
-                            ))}
-                        </>
-                    )}
+                    {/*{isMobile && linesVisible && (*/}
+                    {/*    <>*/}
+                    {/*        {lineConfigs.map(config => (*/}
+                    {/*            <AnimatedLine*/}
+                    {/*                segments={lineGroups[config.id] || []}*/}
+                    {/*                color={config.color}*/}
+                    {/*                thickness={config.thickness}*/}
+                    {/*            />*/}
+                    {/*        ))}*/}
+                    {/*    </>*/}
+                    {/*)}*/}
 
-                    <CenteredText>Tronvolution</CenteredText>
+                    {/*<CenteredText>Tronvolution</CenteredText>*/}
+
+                    {/*{controlsVisible && (*/}
+                    <UIColumnsWrapper>
+                        {/* Left Column */}
+                        <LeftColumn>
+                            <PlayerSelector
+                                text={""}
+                                onClick={() => console.log('Button clicked!')}
+                            />
+                        </LeftColumn>
+
+                        {/* Right Column */}
+                        <RightColumn>
+                            {/*<CircleSlider value={gameSpeed} onChange={setGameSpeed}/>*/}
+                            <GameBoardSelector
+                                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                                onClick={() => console.log('Button clicked!')}
+                            />
+                        </RightColumn>
+                    </UIColumnsWrapper>
+                    {/*)}*/}
 
 
-                    {/*<UIColumnsWrapper>*/}
-                    {/*    /!* Left Column *!/*/}
-                    {/*    <LeftColumn>*/}
-                    {/*        /!* Put your left side content here *!/*/}
-                    {/*    </LeftColumn>*/}
+                    {/*{linesVisible && (*/}
+                    {/*    <StartButtonsAbsoluteWrapper>*/}
+                    {/*        <StartButtonsRelativeWrapper>*/}
+                    {/*            <FuturisticButton2*/}
+                    {/*                text="How to Play"*/}
+                    {/*                onClick={() => console.log('Button clicked!')}*/}
+                    {/*            />*/}
+                    {/*            <FuturisticButton*/}
+                    {/*                text="Start Game"*/}
+                    {/*                onClick={() => console.log('Button clicked!')}*/}
+                    {/*            />*/}
+                    {/*        </StartButtonsRelativeWrapper>*/}
+                    {/*    </StartButtonsAbsoluteWrapper>*/}
+                    {/*)}*/}
 
-                    {/*    /!* Right Column *!/*/}
-                    {/*    <RightColumn>*/}
-                    {/*        <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>*/}
-                    {/*        <GameBoardSelector*/}
-                    {/*            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."*/}
-                    {/*            onClick={() => console.log('Button clicked!')}*/}
-                    {/*        />*/}
-                    {/*    </RightColumn>*/}
-                    {/*</UIColumnsWrapper>*/}
-
-
-                    {/*<StartButtonsAbsoluteWrapper>*/}
-                    {/*    <StartButtonsRelativeWrapper>*/}
-                    {/*        <FuturisticButton2*/}
-                    {/*            text="How to Play"*/}
-                    {/*            onClick={() => console.log('Button clicked!')}*/}
-                    {/*        />*/}
-                    {/*        <FuturisticButton*/}
-                    {/*            text="Start Game"*/}
-                    {/*            onClick={() => console.log('Button clicked!')}*/}
-                    {/*        />*/}
-                    {/*    </StartButtonsRelativeWrapper>*/}
-                    {/*</StartButtonsAbsoluteWrapper>*/}
 
                 </UIOverlay>
             </AppContainer>
