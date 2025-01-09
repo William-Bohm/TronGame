@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import PlayerManager from './components/PlayerManager';
 import {Player, useTronContext} from "./context/GameContext";
-import {ThemeProvider} from "styled-components";
+import {keyframes, ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "./theme";
 import GlobalStyles from './GlobalStyles';
 import NeonLogo from "./components/NeonLogo";
@@ -43,6 +43,48 @@ const LogoAnimation: React.FC = ({ }) => {
   );
 };
 
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+export const AnimatedBackground = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; // This ensures it stays behind your content
+  animation: ${fadeIn} 2s ease-in 11s;
+  animation-fill-mode: backwards;
+  
+  background-image: 
+    radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.1) 1px,
+      transparent 1.5px
+    ),
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.7) 100%
+    ),
+    url('/smokeybackground.webp');
+  
+  background-size: 
+    40px 40px,
+    cover,
+    cover;
+  
+  background-position: center;
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
+`;
 
 const TronGame2: React.FC = () => {
     const [mainMenuActive, setMainMenuActive] = useState(true);
@@ -101,8 +143,9 @@ const TronGame2: React.FC = () => {
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <AppContainer>
         <GlobalStyles />
+          <AnimatedBackground />
           {/*<CubeRain/>*/}
-        {introComplete ? (
+        {!introComplete ? (
             <div>
                 <ThreeScene3/>
             </div>

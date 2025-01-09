@@ -3,6 +3,7 @@ import styled, {keyframes} from 'styled-components';
 import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
+import {CircleButton} from "./PlusButton";
 
 interface FuturisticButtonProps {
     text: string;
@@ -20,36 +21,41 @@ const ButtonContainer = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px 10px;
+    margin-top: -9.5%;
+
+    //padding: 5px 10px;
     transition: all 0.3s ease;
     animation: ${slideDown} 1s ease-out forwards;
+    //border: 2px solid red;
+
     //height: 100%;
     width: 100%;
     min-width: 300px;
+    max-width: 600px;
 
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 5 / 5;
     @media (min-width: 1600px) {
         width: 80%;
     }
 
-    @media (max-width: 1400px) {
-        aspect-ratio: 2 / 3;
-    }
-    @media (max-width: 1200px) {
-        aspect-ratio: 3 / 5;
-    }
+    //@media (max-width: 1400px) {
+    //    aspect-ratio: 2 / 3;
+    //}
+    //@media (max-width: 1200px) {
+    //    aspect-ratio: 3 / 5;
+    //}
     @media (max-width: 1000px) {
-        aspect-ratio: 5 / 5;
+        //aspect-ratio: 5 / 5;
         width: 90%
     }
-    @media (max-width: 900px) {
-        aspect-ratio: 5 / 5;
-    }
-
-
-    @media (max-width: 650px) {
-        aspect-ratio: 3 / 5;
-    }
+    //@media (max-width: 900px) {
+    //    aspect-ratio: 5 / 5;
+    //}
+    //
+    //
+    //@media (max-width: 650px) {
+    //    aspect-ratio: 3 / 5;
+    //}
 `;
 const SVGContainer = styled.svg`
     position: absolute;
@@ -61,36 +67,67 @@ const SVGContainer = styled.svg`
 `;
 
 interface BorderPathProps {
-   strokeWidth?: number;
-   animationSpeed?: number;
-   color?: string;
+    strokeWidth?: number;
+    animationSpeed?: number;
+    color?: string;
 }
 
 const BorderPath = styled.path<BorderPathProps>`
-   fill: none;
-   stroke: ${props => props.color || toRGBA(cssFormatColors.neonBlue, 1)};
-   stroke-width: ${props => props.strokeWidth || 2}px;
-   stroke-dasharray: 1000;
-   stroke-dashoffset: 1000;
-   animation: drawLine ${props => props.animationSpeed || baseLineAnimationTime}s forwards;
-   @keyframes drawLine {
-       to {
-           stroke-dashoffset: 0;
-       }
-   }
+    fill: none;
+    stroke: ${props => props.color || toRGBA(cssFormatColors.neonBlue, 1)};
+    stroke-width: ${props => props.strokeWidth || 2}px;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine ${props => props.animationSpeed || baseLineAnimationTime}s forwards;
+    @keyframes drawLine {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
 `;
+
+const PlusButton = styled.div`
+    position: absolute;
+    top: 82.5%;
+    left: 85%;
+    transform: translate(-50%, -50%);
+    `;
 
 const TextElement = styled.div`
     position: absolute;
     top: 20%;
-    left: 20%;
+    left: 25%;
     transform: translate(-50%, -50%);
-        font-family: 'Orbitron', sans-serif;
+    font-family: 'Orbitron', sans-serif;
 
     font-weight: 500;
     font-size: 2.5rem;
     width: 90%; // Control text width
+
+    @media (max-width: 1400px) {
+        left: 30%;
+    }
+
+    @media (max-width: 1250px) {
+        left: 30%;
+        font-size: 2rem;
+    }
+
+    @media (max-width: 1000px) {
+        font-size: 2.5rem;
+    }
+    @media (max-width: 650px) {
+        left: 30%;
+        font-size: 2rem;
+    }
+    @media (max-width: 450px) {
+        left: 30%;
+        font-size: 1.5rem;
+    }
+
+
 `;
+
 interface TextContainerProps {
     isMobile: boolean;
 }
@@ -103,10 +140,11 @@ const TextContainer = styled.div<TextContainerProps>`
             ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 50%,
             ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 80%
     );
-    padding: '8px 8px';
     margin: 0;
+
     color: ${() => toRGBA(cssFormatColors.darkGrey, 0.8)};
     transition: all 0.3s ease;
+    padding: 8px 8px;
     height: 100%;
     width: 100%;
 
@@ -156,24 +194,19 @@ const HeaderContainer = styled.div<TextContainerProps>`
             36% 14%,
             64% 14%,
             67% 17%,
-            
-            /* right corner*/
-            92% 17%,
+                /* right corner*/ 92% 17%,
             94% 19%,
             94% 21%,
             92% 19%,
             88% 19%,
-            
-            /* bottom bump*/
-            92% 19%,
+                /* bottom bump*/ 92% 19%,
             70% 19%,
             67% 19%,
             60% 19%,
-            
             52% 27%,
             7% 27%,
-            1% 23%,
-            1% 17%
+            2% 23%,
+            2% 17%
     );
 
     text-align: center;
@@ -214,14 +247,64 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
     const [isHovered, setIsHovered] = useState<boolean>(false);
     const [showLines, setShowLines] = useState<boolean>(false);
     const [showDiagnolArrayLines, setShowDiagnolArrayLines] = useState<boolean>(false);
-    // const []
+    // top thick bar animation vals
+    const [topThickBar, setTopThickBar] = useState<boolean>(false);
+    const [topThickOne, setTopThickOne] = useState<boolean>(false);
+    const [topThickTwo, setTopThickTwo] = useState<boolean>(false);
+    const [topThickThree, setTopThickThree] = useState<boolean>(false);
+    const [topThickFour, setTopThickFour] = useState<boolean>(false);
+    const [topThickFive, setTopThickFive] = useState<boolean>(false);
+    const [topThickSix, setTopThickSix] = useState<boolean>(false);
+    const [topThickSeven, setTopThickSeven] = useState<boolean>(false);
+    const [topThickEight, setTopThickEight] = useState<boolean>(false);
+    const [randomThickBottomBar, setRandomThickBottomBar] = useState<boolean>(false);
+    const topThickStartTime = 2000;
+    const thickBarSpeed = 10;
 
+
+    // repeated bars vars
+    const [topRepeatedBars, setTopRepeatedBars] = useState<boolean>(false);
+    const [bottomRepeatedBars, setBottomRepeatedBars] = useState<boolean>(false);
+    const repeatedBarsStartTimie = 3300;
 
     // timer for lines
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowLines(true);
         }, 300);
+
+        // thick bars
+        setTimeout(() => {
+            setTopThickTwo(true);
+        }, topThickStartTime + 0);
+        setTimeout(() => {
+            setTopThickOne(true);
+        }, topThickStartTime + 50);
+        setTimeout(() => {
+            setTopThickThree(true);
+        }, topThickStartTime + 500);
+        setTimeout(() => {
+            setTopThickFour(true);
+        }, topThickStartTime + 550);
+        setTimeout(() => {
+            setTopThickFive(true);
+        }, topThickStartTime + 925);
+        setTimeout(() => {
+            setTopThickSix(true);
+        }, topThickStartTime + 1075);
+        setTimeout(() => {
+            setTopThickSeven(true);
+        }, topThickStartTime + 1750);
+
+
+
+        // repeated bars
+        setTimeout(() => {
+            setTopRepeatedBars(true);
+            setBottomRepeatedBars(true);
+            setRandomThickBottomBar(true);
+        }, repeatedBarsStartTimie);
+
 
         // Cleanup function
         return () => clearTimeout(timer);
@@ -236,7 +319,14 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
             <TextContainer isMobile={isMobile}>
                 <HeaderContainer isMobile={isMobile}>
                 </HeaderContainer>
-                <TextElement>Players</TextElement>
+                <TextElement>
+                    PLAYERS
+                </TextElement>
+                <PlusButton>
+                                    <CircleButton/>
+
+                </PlusButton>
+
             </TextContainer>
             {showLines && (
                 <div>
@@ -247,8 +337,8 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         M 0.5 30.5
         L 0.5 17
         L 8 9.5
-        L 36.5 9.5
-        L 38.5 12.5
+        L 35 9.5
+        L 37 12.5
         L 65.5 12.5
         L 68.5 15.5
         L 91.5 15.5
@@ -257,110 +347,132 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         L 97.5 72.5
         L 97.5 87
         L 94 90.5
-        L 41 90.5
-        L 38 93.5
+        L 40 90.5
+        L 37 93.5
         L 12.5 93.5
         L 5.5 86
         L 5.5 35.5
         L 0.5 30.5
     `}
-                            animationSpeed={1} // 12 is good
+                            animationSpeed={10} // 12 is good
                             strokeWidth={0.5}
                         />
 
                         {/*top thicks*/}
 
-                        <BorderPath
-                            d={`
-        M 38.5 11.8
+                        {topThickOne && (
+                            <BorderPath
+                                d={`
+        M 37 11.8
         L 67.5 11.8
 
     `}
-                            animationSpeed={1}
-                            strokeWidth={2}
-                        />
-                        <BorderPath
+                                animationSpeed={thickBarSpeed}
+                                strokeWidth={2}
+                            />
+                        )}
+                        {topThickTwo && (<BorderPath
                             d={`
-        M 39 11.17
-        L 38 11.8
+        M 37.5 11.17
+        L 36.5 11.8
 
     `}
-                            animationSpeed={1}
+                            animationSpeed={thickBarSpeed}
                             strokeWidth={1}
-                        />
-                        <BorderPath
+                        />)}
+                        {topThickThree && (<BorderPath
                             d={`
         M 66.5 11.8
         L 69.5 14.8
 
     `}
-                            animationSpeed={1}
+                            animationSpeed={thickBarSpeed}
                             strokeWidth={3}
-                        />
-                        <BorderPath
+                        />)}
+                        {topThickFour && (<BorderPath
                             d={`
         M 68.5 14
         L 92 14
 
     `}
-                            animationSpeed={1}
+                            animationSpeed={thickBarSpeed}
                             strokeWidth={3.5}
-                        />
-                        <BorderPath
+                        />)}
+                        {topThickFive && (<BorderPath
                             d={`
         M 91 13.05
         L 95.5 18.2
 
     `}
-                            animationSpeed={1}
+                            animationSpeed={thickBarSpeed}
                             strokeWidth={2.5}
-                        />
-                        <BorderPath
+                        />)}
+                        {topThickSix && (<BorderPath
                             d={`
         M 95.5 17.5
         L 95.5 69.5
 
     `}
-                            animationSpeed={1}
+                            animationSpeed={thickBarSpeed}
                             strokeWidth={1.8}
-                        />
-                        <BorderPath
+                        />)}
+                        {topThickSeven && (<BorderPath
                             d={`
         M 95.7 69
         L 95 70
 
     `}
-                            animationSpeed={1}
+                            animationSpeed={thickBarSpeed}
                             strokeWidth={1.8}
-                        />
+                        />)}
 
-
-                        {/*             bottom           repeats*/}
-                        {Array.from({length: 17}).map((_, index) => (
-                            <BorderPath
-                                key={index}
-                                d={`
+                        {bottomRepeatedBars && (
+                            <>
+                                {Array.from({length: 17}).map((_, index) => (
+                                    <BorderPath
+                                        key={index}
+                                        d={`
             M ${88 - (index * 3)} 94.5
             L ${91 - (index * 3)} 91.5
         `}
-                                animationSpeed={100}
-                                strokeWidth={1.5}
-                            />
-                        ))}
+                                        animationSpeed={100}
+                                        strokeWidth={1.5}
+                                    />
+                                ))}</>
+                        )}
+                        {/*             bottom           repeats*/}
+
 
                         {/*             top           repeats*/}
-                        {Array.from({length: 8}).map((_, index) => (
-                            <BorderPath
-                                key={index}
-                                d={`
+                        {topRepeatedBars && (
+                            <>
+                                {Array.from({length: 8}).map((_, index) => (
+                                    <BorderPath
+                                        key={index}
+                                        d={`
             M ${89 - (index * 3)} 13
             L ${91 - (index * 3)} 15
         `}
-                                animationSpeed={100}
+                                        animationSpeed={100}
+                                        strokeWidth={1.5}
+                                        color={toRGBA(cssFormatColors.darkGrey, 1)}
+                                    />
+                                ))}</>
+                        )}
+
+                        {/*    random bottom bar*/}
+                        {randomThickBottomBar && (
+                            <BorderPath
+                                d={`
+        M 30 91.5
+        L 13.5 91.5
+        L 9.5 87.5
+
+    `}
+                                animationSpeed={thickBarSpeed}
                                 strokeWidth={1.5}
-                                color={toRGBA(cssFormatColors.darkGrey, 1)}
                             />
-                        ))}
+                        )}
 
 
                     </SVGContainer>

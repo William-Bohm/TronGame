@@ -119,10 +119,13 @@ const LeftColumn = styled.div`
         width: 100%;
     }
     height: 100%;
-    padding: 20px;
+    //padding: 20px;
     pointer-events: auto; // Re-enable pointer events for the UI elements
-    border: 2px solid ${({theme}) => theme.colors.primary};
-
+    // border: 2px solid ${({theme}) => theme.colors.primary};
+//    center elements
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `;
 
 const RightColumn = styled.div`
@@ -134,9 +137,10 @@ const RightColumn = styled.div`
         width: 100%;
     }
     pointer-events: auto; // Re-enable pointer events for the UI elements
-    border: 2px solid ${({theme}) => theme.colors.primary};
+    // border: 2px solid ${({theme}) => theme.colors.primary};
     //justify-content: space-between;
     align-items: center;
+    justify-content: center;
     display: flex;
     flex-direction: column;
 `;
@@ -524,9 +528,9 @@ const MainMenu: React.FC = () => {
                     {/*    </>*/}
                     {/*)}*/}
 
-                    {/*<CenteredText>Tronvolution</CenteredText>*/}
+                    <CenteredText>Tronvolution</CenteredText>
 
-                    {/*{controlsVisible && (*/}
+                    {controlsVisible && (
                     <UIColumnsWrapper>
                         {/* Left Column */}
                         <LeftColumn>
@@ -538,30 +542,30 @@ const MainMenu: React.FC = () => {
 
                         {/* Right Column */}
                         <RightColumn>
-                            {/*<CircleSlider value={gameSpeed} onChange={setGameSpeed}/>*/}
+                            <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
                             <GameBoardSelector
                                 text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
                                 onClick={() => console.log('Button clicked!')}
                             />
                         </RightColumn>
                     </UIColumnsWrapper>
-                    {/*)}*/}
+                    )}
 
 
-                    {/*{linesVisible && (*/}
-                    {/*    <StartButtonsAbsoluteWrapper>*/}
-                    {/*        <StartButtonsRelativeWrapper>*/}
-                    {/*            <FuturisticButton2*/}
-                    {/*                text="How to Play"*/}
-                    {/*                onClick={() => console.log('Button clicked!')}*/}
-                    {/*            />*/}
-                    {/*            <FuturisticButton*/}
-                    {/*                text="Start Game"*/}
-                    {/*                onClick={() => console.log('Button clicked!')}*/}
-                    {/*            />*/}
-                    {/*        </StartButtonsRelativeWrapper>*/}
-                    {/*    </StartButtonsAbsoluteWrapper>*/}
-                    {/*)}*/}
+                    {linesVisible && (
+                        <StartButtonsAbsoluteWrapper>
+                            <StartButtonsRelativeWrapper>
+                                <FuturisticButton2
+                                    text="How to Play"
+                                    onClick={() => console.log('Button clicked!')}
+                                />
+                                <FuturisticButton
+                                    text="Start Game"
+                                    onClick={() => console.log('Button clicked!')}
+                                />
+                            </StartButtonsRelativeWrapper>
+                        </StartButtonsAbsoluteWrapper>
+                    )}
 
 
                 </UIOverlay>

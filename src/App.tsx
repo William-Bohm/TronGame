@@ -4,6 +4,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import MainMenu from "./components/mainMenu/MainMenu";
 // import ThreeScene3 from "./components/newAnimations/ThreeScene3";
 import TronGame2 from "./TronGame2";
+import styled, {keyframes} from "styled-components";
+
+
 
 const App: React.FC = () => {
   return (
