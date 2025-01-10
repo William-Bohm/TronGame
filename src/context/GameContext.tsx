@@ -11,8 +11,6 @@ type ControlSchemesMapping = Record<ControlScheme, KeyMap>;
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
-//
-
 /*
  * TODO: Want to be able to iterate through all directions.
  * This feels bad - Direction should probably be an Enum?

@@ -96,10 +96,10 @@ const GameSpeedWrapper = styled.div`
 
 const UIColumnsWrapper = styled.div`
     position: absolute;
-    top: 15%;
+    top: 13%;
     left: 8%;
     width: 84%;
-    height: 80%;
+    height: 70%;
     @media (max-width: 1000px) {
         left: 0;
         width: 100vw;
@@ -140,7 +140,7 @@ const RightColumn = styled.div`
     // border: 2px solid ${({theme}) => theme.colors.primary};
     //justify-content: space-between;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     display: flex;
     flex-direction: column;
 `;
@@ -152,6 +152,7 @@ import {CircleSlider} from "../components/SciFiComponents/CircleSelector";
 import FuturisticButton from "../components/SciFiComponents/SciFiButton1";
 import FuturisticButton2 from "../components/SciFiComponents/SciFitButton2";
 import PlayerSelector from "../components/SciFiComponents/PlayerSelector";
+import AnimatedRings from "../components/SciFiComponents/AnimatedRings";
 
 // Create the glitch animation
 const glitchAnimation = keyframes`
@@ -199,7 +200,7 @@ const moveUpAnimation = keyframes`
         left: 50%;
     }
     100% {
-        top: 10%;
+        top: 8%;
         left: 50%;
     }
 `;
@@ -528,9 +529,9 @@ const MainMenu: React.FC = () => {
                     {/*    </>*/}
                     {/*)}*/}
 
-                    <CenteredText>Tronvolution</CenteredText>
+                    {/*<CenteredText>Tronvolution</CenteredText>*/}
 
-                    {controlsVisible && (
+                    {/*{controlsVisible && (*/}
                     <UIColumnsWrapper>
                         {/* Left Column */}
                         <LeftColumn>
@@ -549,7 +550,7 @@ const MainMenu: React.FC = () => {
                             />
                         </RightColumn>
                     </UIColumnsWrapper>
-                    )}
+                    {/*)}*/}
 
 
                     {linesVisible && (

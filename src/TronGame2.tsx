@@ -60,7 +60,7 @@ export const AnimatedBackground = styled.div`
   width: 100%;
   height: 100%;
   z-index: -1; // This ensures it stays behind your content
-  animation: ${fadeIn} 2s ease-in 11s;
+  animation: ${fadeIn} 1s ease-in 0s; // 2s 11s
   animation-fill-mode: backwards;
   
   background-image: 
@@ -72,9 +72,10 @@ export const AnimatedBackground = styled.div`
     radial-gradient(
       circle at center,
       rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.7) 100%
+      rgba(0, 0, 0, .6) 50%,
+      rgba(0, 0, 0, 0.5) 100%
     ),
-    url('/smokeybackground.webp');
+    url('/bluredSmokeyBackground30.png');
   
   background-size: 
     40px 40px,
@@ -145,7 +146,7 @@ const TronGame2: React.FC = () => {
         <GlobalStyles />
           <AnimatedBackground />
           {/*<CubeRain/>*/}
-        {!introComplete ? (
+        {introComplete ? (
             <div>
                 <ThreeScene3/>
             </div>

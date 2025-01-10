@@ -25,12 +25,14 @@ export const materials = {
 // You could also store just the colors if you want to create materials with different properties
 export const colors = {
     neonBlue: 0x9dfcfcc,
+    soulessNeonBlue: 0x6cbaba,
     neonOrange: 0xff9f05,
     darkGrey: 0x0a0a0a
 };
 
 export const cssFormatColors = {
     neonBlue: '#9dfcfc',    // Changed from 0x9dfcfcc
+    soulessNeonBlue: '#6cbaba',
     neonOrange: '#ff9f05',  // Changed from 0xff9f05
     darkGrey: '#0a0a0a'
 }

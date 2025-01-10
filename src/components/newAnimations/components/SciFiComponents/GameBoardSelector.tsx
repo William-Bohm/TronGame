@@ -3,6 +3,8 @@ import styled, {keyframes} from 'styled-components';
 import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
+import AnimatedRings from "./AnimatedRings";
+import {useTronContext} from "../../../../context/GameContext";
 
 interface FuturisticButtonProps {
     text: string;
@@ -16,7 +18,7 @@ const baseLineAnimationTime = 2;
 // Then modify your ButtonContainer
 const ButtonContainer = styled.div`
     position: relative;
-    cursor: pointer;
+    //cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -42,7 +44,7 @@ interface BorderPathProps {
 
 const BorderPath = styled.path<BorderPathProps>`
     fill: none;
-    stroke: ${() => toRGBA(cssFormatColors.neonBlue, 0.8)};
+    stroke: ${props => props.color || toRGBA(cssFormatColors.neonBlue, 1)};
     stroke-width: ${props => props.strokeWidth || 2}px;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
@@ -54,18 +56,80 @@ const BorderPath = styled.path<BorderPathProps>`
     }
 `;
 
+const InnerContent = styled.div<{ isMobile?: boolean }>`
+    position: absolute;
+    width: 80%;
+    height: 52%;
+    top: 32%;
+    left: 12%;
+    padding-left: 10px;
+    margin: 0 auto; // This will center it horizontally
+    //border: 2px solid red;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+`;
+
+const TextElement = styled.div`
+    position: absolute;
+    top: 23%;
+    left: 33%;
+    transform: translate(-50%, -50%);
+    font-family: 'Orbitron', sans-serif;
+    color: ${cssFormatColors.darkGrey};
+
+    font-weight: 600;
+    font-size: 1.3rem;
+    width: 90%; // Control text width
+`;
+
+const HeaderContainer = styled.div<TextContainerProps>`
+    font-family: 'Orbitron', sans-serif;
+    background: ${() => toRGBA(cssFormatColors.neonBlue, 0.75)};
+    //padding: '8px 8px';
+    margin: 0;
+    color: orangered;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    min-width: 300px;
+
+    clip-path: polygon(
+            6% 12%,
+            41% 12%,
+            46% 17%,
+            88% 17%,
+            83% 20%,
+            70% 20%,
+            58% 31%,
+            35% 31%,
+            30% 31%,
+            7% 31%,
+            6% 31%,
+            2% 27%,
+            2% 17%
+    );
+
+    text-align: center;
+`;
+
 interface TextContainerProps {
     isMobile: boolean;
 }
 
 const TextContainer = styled.div<TextContainerProps>`
     font-family: 'Orbitron', sans-serif;
-    background: radial-gradient(
-            circle at center,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.4)} 0%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 50%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 80%
-    );
+    // background: 
+    //     radial-gradient(
+    //         circle at center,
+        //         ${() => toRGBA(cssFormatColors.neonBlue, 0.4)} 0%,
+        //         ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 50%,
+        //         ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 80%
+    //     ),
+        //     ${() => toRGBA(cssFormatColors.darkGrey, .2)}; 
     padding: '8px 8px';
     margin: 0;
     color: black;
@@ -80,9 +144,6 @@ const TextContainer = styled.div<TextContainerProps>`
     );
 
     text-align: center;
-
-    ${ButtonContainer}:hover & {
-    }
 `;
 
 
@@ -108,9 +169,52 @@ const RightCircleSVGContainer = styled.svg`
 
 const CircleMarker = styled.circle`
     fill: none;
-    stroke: ${() => toRGBA(cssFormatColors.neonBlue, 0.8)};;
+    stroke: ${() => toRGBA(cssFormatColors.neonBlue, 0.8)};
     stroke-width: 2;
 `;
+
+// grid selector
+const Container = styled.div`
+    display: flex;
+    flex-direction: column;
+    //gap: 16px;
+    width: 100%;
+`;
+
+const SelectorButton = styled.button<{ isSelected: boolean }>`
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding-top: 4px;
+    background: none;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    color: ${cssFormatColors.neonBlue};
+    transition: border-color 0.2s ease;
+
+    &:hover {
+        border-color: ${() => toRGBA(cssFormatColors.neonBlue, 0.4)};
+    }
+`;
+
+const ButtonText = styled.span`
+    font-size: 16px;
+`;
+
+interface GridOption {
+    width: number;
+    height: number;
+    label: string;
+}
+
+const gridOptions: GridOption[] = [
+    {width: 10, height: 10, label: '10 x 10'},
+    {width: 50, height: 50, label: '50 x 50'},
+    {width: 100, height: 100, label: '100 x 100'},
+    {width: 200, height: 200, label: '200 x 200'},
+];
 
 const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
                                                                 text,
@@ -120,8 +224,15 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
     const [isHovered, setIsHovered] = useState<boolean>(false);
     const [showLines, setShowLines] = useState<boolean>(false);
     const [showDiagnolArrayLines, setShowDiagnolArrayLines] = useState<boolean>(false);
-    // const []
+    const [showThickLines, setShowThickLines] = useState<boolean>(false);
+    const {updateGridSize, gridSize} = useTronContext();
 
+    const isSelected = (option: GridOption) =>
+        gridSize.width === option.width && gridSize.height === option.height;
+
+    const handleSelect = (option: GridOption) => {
+        updateGridSize(option.width, option.height);
+    };
 
     // timer for lines
     useEffect(() => {
@@ -129,17 +240,42 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
             setShowLines(true);
         }, 300);
 
+        setTimeout(() => {
+            setShowThickLines(true);
+        }, 1200);
+
+        setTimeout(() => {
+            setShowDiagnolArrayLines(true);
+        }, 2000);
+
         // Cleanup function
         return () => clearTimeout(timer);
     }, []);
 
     return (
-        <ButtonContainer
-            onClick={onClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
+        <ButtonContainer>
             <TextContainer isMobile={isMobile}>
+                <HeaderContainer isMobile={isMobile}>
+                </HeaderContainer>
+                <TextElement>Game Board</TextElement>
+                <InnerContent>
+                    <Container>
+                        {gridOptions.map((option) => (
+                            <SelectorButton
+                                key={`${option.width}x${option.height}`}
+                                isSelected={isSelected(option)}
+                                onClick={() => handleSelect(option)}
+                            >
+                                <AnimatedRings
+                                    size={40}
+                                    isSelected={isSelected(option)}
+
+                                />
+                                <ButtonText>{option.label}</ButtonText>
+                            </SelectorButton>
+                        ))}
+                    </Container>
+                </InnerContent>
                 {/*{text}*/}
             </TextContainer>
             {showLines && (
@@ -148,70 +284,80 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
                         {/*                        all the way around*/}
                         <BorderPath
                             d={`
-        M 1.7 30
-        L 1.7 16
-        L 6.5 9.9
-        L 46 9.9
-        L 51 15
+        M 3 30
+        L 3 16
+        L 7.5 9.9
+        L 45.5 9.9
+        L 50.5 15
         L 92.5 15
-        L 98 20.5
-        L 98 29
-        L 95 32
-        L 95 59.5
-        L 98 62
-        L 98 84.5
+        L 97 20.5
+        L 97 28
+        L 94 31
+        L 94 59.5
+        L 97 63
+        L 97 84.5
         L 92.5 90
         L 19.5 90
-        L 6 79
-        L 6 35
-        L 1.7 30
+        L 7.7 79
+        L 7.7 35
+        L 3 30
     `}
-                            animationSpeed={1} // 12 is good
+                            animationSpeed={10} // 12 is good
                             strokeWidth={0.5}
                         />
-                        {/*left thick*/}
-                        <BorderPath
-                            d={`
-        M 4.5 30
-        L 8.5 35
-        L 8.5 53
+
+                        {showThickLines && (
+                            <>
+                                {/*left thick*/}
+                                <BorderPath
+                                    d={`
+        M 5.7 30
+        L 9.7 34.5
+        L 9.7 53
 
     `}
-                            animationSpeed={40}
-                            strokeWidth={1.5}
-                        />
-                        {/*right thick*/}
+                                    animationSpeed={40}
+                                    strokeWidth={1.5}
+                                />
+                                {/*right thick*/}
 
-                        <BorderPath
-                            d={`
-        M 95 62
-        L 95 83
-        L 90 88
+                                <BorderPath
+                                    d={`
+        M 95 63
+        L 95 84
+        L 91.5 88.5
 
     `}
-                            animationSpeed={40}
-                            strokeWidth={1.5}
-                        />
+                                    animationSpeed={40}
+                                    strokeWidth={1.5}
+                                />
+                            </>
+                        )}
+
                         {/*    left bars*/}
-    {/*                    <BorderPath*/}
-    {/*                        d={`*/}
-    {/*    M 0 50*/}
-    {/*    L 4.5 52*/}
-    {/*`}*/}
-    {/*                        animationSpeed={40}*/}
-    {/*                        strokeWidth={1.5}*/}
-    {/*                    />*/}
-                        {Array.from({ length: 11 }).map((_, index) => (
-                            <BorderPath
-                                key={index}
-                                d={`
+                        {/*                    <BorderPath*/}
+                        {/*                        d={`*/}
+                        {/*    M 0 50*/}
+                        {/*    L 4.5 52*/}
+                        {/*`}*/}
+                        {/*                        animationSpeed={40}*/}
+                        {/*                        strokeWidth={1.5}*/}
+                        {/*                    />*/}
+                        {showDiagnolArrayLines && (
+                            <>
+                                {Array.from({length: 11}).map((_, index) => (
+                                    <BorderPath
+                                        key={index}
+                                        d={`
                                     M 1 ${73 - (index * 4)}
                                     L 4.5 ${77 - (index * 4)} 
                                 `}
-                                animationSpeed={100}
-                                strokeWidth={1.5}
-                            />
-                        ))}
+                                        animationSpeed={100}
+                                        strokeWidth={1.5}
+                                    />
+                                ))}
+                            </>
+                        )}
 
 
                     </SVGContainer>

@@ -4,6 +4,10 @@ import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
 import {CircleButton} from "./PlusButton";
+import {darken, lighten} from "polished";
+import {ControlScheme, Player, Position, useTronContext} from "../../../../context/GameContext";
+import {FaTrashAlt} from "react-icons/fa";
+import AnimatedRings from "./AnimatedRings";
 
 interface FuturisticButtonProps {
     text: string;
@@ -17,7 +21,7 @@ const baseLineAnimationTime = 2;
 // Then modify your ButtonContainer
 const ButtonContainer = styled.div`
     position: relative;
-    cursor: pointer;
+    //cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -64,6 +68,7 @@ const SVGContainer = styled.svg`
     width: 100%;
     height: 100%;
     pointer-events: none;
+    isolation: isolate;
 `;
 
 interface BorderPathProps {
@@ -91,17 +96,17 @@ const PlusButton = styled.div`
     top: 82.5%;
     left: 85%;
     transform: translate(-50%, -50%);
-    `;
+`;
 
 const TextElement = styled.div`
     position: absolute;
-    top: 20%;
+    top: 20.5%;
     left: 25%;
     transform: translate(-50%, -50%);
     font-family: 'Orbitron', sans-serif;
 
     font-weight: 500;
-    font-size: 2.5rem;
+    font-size: 2.3rem;
     width: 90%; // Control text width
 
     @media (max-width: 1400px) {
@@ -124,8 +129,73 @@ const TextElement = styled.div`
         left: 30%;
         font-size: 1.5rem;
     }
+`;
+
+const InnerContent = styled.div<{ isMobile?: boolean }>`
+    position: absolute;
+    width: 75%;
+    height: 62%;
+    top: 28%;
+    left: 6%;
+    padding-left: 10px;
+    margin: 0 auto; // This will center it horizontally
+    border: 2px solid red;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+`;
+
+const TrashIcon = styled(FaTrashAlt)`
+    cursor: pointer;
+    color: ${({theme}) => theme.colors.primary};
+    transition: color 0.1s ease;
+    margin-left: 10px;
+
+    &:hover {
+        color: ${({theme}) => theme.colors.secondary};
+    }
+`;
 
 
+const PlayerCard = styled.div`
+    background: ${({theme}) => theme.colors.background};
+    border: 2px solid ${({theme}) => theme.colors.primary};
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h3 {
+        margin: 0 10px;
+        color: ${({theme}) => theme.colors.primary};
+    }
+
+    p {
+        margin: 0;
+        color: ${({theme}) => theme.colors.primary};
+    }
+
+    select, input[type="color"] {
+        background: ${({theme}) => theme.colors.background};
+        color: ${({theme}) => theme.colors.primary};
+        border: 1px solid ${({theme}) => theme.colors.primary};
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    &:hover {
+        box-shadow: 0 0 10px ${({theme}) => theme.colors.primary};
+    }
+`;
+
+const PlayerControls = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
 `;
 
 interface TextContainerProps {
@@ -134,12 +204,14 @@ interface TextContainerProps {
 
 const TextContainer = styled.div<TextContainerProps>`
     font-family: 'Orbitron', sans-serif;
-    background: radial-gradient(
-            circle at center,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.4)} 0%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 50%,
-            ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 80%
-    );
+    // background: 
+    //     radial-gradient(
+    //         circle at center,
+        //         ${() => toRGBA(cssFormatColors.neonBlue, 0.4)} 0%,
+        //         ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 50%,
+        //         ${() => toRGBA(cssFormatColors.neonBlue, 0.2)} 80%
+    //     ),
+        //     ${() => toRGBA(cssFormatColors.darkGrey, .2)}; 
     margin: 0;
 
     color: ${() => toRGBA(cssFormatColors.darkGrey, 0.8)};
@@ -147,9 +219,7 @@ const TextContainer = styled.div<TextContainerProps>`
     padding: 8px 8px;
     height: 100%;
     width: 100%;
-
     overflow: hidden;
-
     clip-path: polygon(
             7% 10%,
             20% 10%,
@@ -168,7 +238,6 @@ const TextContainer = styled.div<TextContainerProps>`
             0% 30%,
             0% 17%
     );
-
     text-align: center;
 
     ${ButtonContainer}:hover & {
@@ -177,7 +246,7 @@ const TextContainer = styled.div<TextContainerProps>`
 
 const HeaderContainer = styled.div<TextContainerProps>`
     font-family: 'Orbitron', sans-serif;
-    background: ${() => toRGBA(cssFormatColors.neonBlue, 0.5)};
+    background: ${() => toRGBA(cssFormatColors.neonBlue, 0.75)};
     //padding: '8px 8px';
     margin: 0;
     color: orangered;
@@ -239,15 +308,91 @@ const CircleMarker = styled.circle`
     stroke-width: 2;
 `;
 
+
+//
+// Color picker
+//
+const ColorPickerWrapper = styled.div`
+    position: relative;
+    cursor: pointer;
+`;
+
+const ColorOptions = styled.div`
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    background: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+`;
+
+const ColorOption = styled.div`
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: ${props => props.color};
+
+    &:hover {
+        transform: scale(1.1);
+        transition: transform 0.2s ease;
+    }
+`;
+
+interface CustomColorPickerProps {
+    player: Player;
+    updatePlayer: (id: number, field: keyof Player, value: any) => void;
+}
+
+const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, updatePlayer}) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleColorSelect = (color: string) => {
+        updatePlayer(player.id, 'color', color);
+        setIsOpen(false);
+    };
+
+    return (
+        <ColorPickerWrapper onClick={() => setIsOpen(!isOpen)}>
+            <AnimatedRings
+                size={40}
+                isSelected={true}
+                color={player.color}
+            />
+            {isOpen && (
+                <ColorOptions>
+                    {Object.entries(cssFormatColors).map(([name, color]) => (
+                        <ColorOption
+                            key={name}
+                            color={color}
+                            onClick={() => handleColorSelect(color)}
+                        />
+                    ))}
+                </ColorOptions>
+            )}
+        </ColorPickerWrapper>
+    );
+};
+
+
 const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                                                              text,
                                                              onClick,
                                                          }) => {
+    //
+    //
+    // animation variables
+    //
+    //
     const isMobile = useIsMobile();
     const [isHovered, setIsHovered] = useState<boolean>(false);
     const [showLines, setShowLines] = useState<boolean>(false);
     const [showDiagnolArrayLines, setShowDiagnolArrayLines] = useState<boolean>(false);
-    // top thick bar animation vals
     const [topThickBar, setTopThickBar] = useState<boolean>(false);
     const [topThickOne, setTopThickOne] = useState<boolean>(false);
     const [topThickTwo, setTopThickTwo] = useState<boolean>(false);
@@ -260,7 +405,6 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
     const [randomThickBottomBar, setRandomThickBottomBar] = useState<boolean>(false);
     const topThickStartTime = 2000;
     const thickBarSpeed = 10;
-
 
     // repeated bars vars
     const [topRepeatedBars, setTopRepeatedBars] = useState<boolean>(false);
@@ -297,7 +441,6 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         }, topThickStartTime + 1750);
 
 
-
         // repeated bars
         setTimeout(() => {
             setTopRepeatedBars(true);
@@ -310,21 +453,193 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         return () => clearTimeout(timer);
     }, []);
 
+    //
+    //
+    // player manager logic
+    //
+    //
+
+    const {
+        players,
+        setPlayers,
+        gridSize,
+        gameStatus,
+        availableControlSchemes,
+        setAvailableControlSchemes,
+        allControlSchemes,
+        calculatePlayerStartPositions,
+        setGameGrid,
+        resetGame,
+    } = useTronContext();
+    const [newPlayer, setNewPlayer] = useState<Partial<Player>>({});
+
+    const addPlayer = () => {
+        if (gameStatus !== 'playing') {
+            resetGame();
+            let type = 'human';
+            let controlScheme = getUserControlScheme();
+            if (players.filter(player => player.type === 'human').length >= allControlSchemes.length) {
+                type = 'bot';
+            }
+
+            let nextID = Math.max(...players.map(player => player.id), 0) + 1;
+            let newPlayers = [...players, {
+                ...newPlayer,
+                id: nextID,
+                type: type,
+                position: [0, 0] as Position,
+                name: 'player' + ' ' + (players.length + 1),
+                score: 0,
+                direction: 'right',
+                controlScheme: getUserControlScheme(),
+                color: getUserDefaultColor(players),
+            } as Player];
+
+            newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
+
+            setPlayers([...newPlayers]);
+            setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
+            setNewPlayer({});
+
+        }
+    };
+
+    const updatePlayer = (id: number, field: keyof Player, value: any) => {
+        if (gameStatus !== 'playing') {
+            if (field === 'controlScheme') {
+                const player = players.find(player => player.id === id);
+                setAvailableControlSchemes([...availableControlSchemes, players.find(player => player.id === id)?.controlScheme as ControlScheme]);
+                if (value === 'bot') {
+                    console.log('set player to bot now')
+                    setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'bot'} : p));
+                } else if (player?.type === 'bot' && value !== 'bot')
+                    setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'human'} : p));
+            } else {
+                setPlayers(players.map(p => p.id === id ? {...p, [field]: value} : p));
+            }
+
+        }
+    };
+
+
+    const removePlayer = (id: number) => {
+        try {
+            if (gameStatus !== 'playing') {
+                resetGame();
+                let newPlayers = players.filter(player => player.id !== id);
+                newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
+                const controlScheme = players.find(player => player.id === id)?.controlScheme;
+                setPlayers([...newPlayers]);
+
+                if (controlScheme !== 'bot') {
+                    setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
+                }
+            }
+        } catch (e) {
+            console.log('error baby')
+            console.log(e)
+        }
+    };
+
+
+    function getUserControlScheme(): ControlScheme {
+        const usedSchemes = players.map(player => player.controlScheme);
+        const availableSchemes = availableControlSchemes.filter(scheme => !usedSchemes.includes(scheme));
+        return availableSchemes[0];
+    }
+
+    function getUserDefaultColor(players: Player[]): string {
+        const neonColors = [
+            "#FF00FF", // Magenta
+            "#00FFFF", // Cyan
+            "#FF0000", // Red
+            "#00FF00", // Lime
+            "#0000FF", // Blue
+            "#FFFF00", // Yellow
+            "#FE01B1", // Pink
+            "#01FFFE", // Aqua
+            "#FFA300", // Orange
+            "#7CFC00", // Lawn green
+            "#8B00FF", // Violet
+            "#FF1493", // Deep pink
+            "#00FF7F", // Spring green
+            "#FF4500", // Orange red
+            "#1E90FF", // Dodger blue
+            "#FFFF33", // Yellow (lighter)
+            "#FF69B4", // Hot pink
+            "#00CED1", // Dark turquoise
+            "#7FFF00", // Chartreuse
+            "#FF6347", // Tomato
+            "#00BFFF", // Deep sky blue
+            "#FF00FF", // Fuchsia
+            "#00FA9A", // Medium spring green
+            "#FF1493", // Deep pink
+            "#00FF00", // Lime (again, very noticeable)
+            "#FF4081", // Pink (Material Design)
+            "#64FFDA", // Teal (Material Design)
+            "#FF3D00", // Deep Orange (Material Design)
+            "#00E5FF", // Cyan (Material Design)
+            "#76FF03"  // Light Green (Material Design)
+        ];
+
+        const usedColors = new Set(players.map(player => player.color));
+
+        for (const color of neonColors) {
+            if (!usedColors.has(color)) {
+                return color;
+            }
+        }
+
+        // If all colors are used, return a random bright color as a fallback
+        const randomBrightColor = () => {
+            const h = Math.floor(Math.random() * 360);
+            const s = Math.floor(Math.random() * 21) + 80; // 80-100%
+            const l = Math.floor(Math.random() * 11) + 50; // 50-60%
+            return `hsl(${h}, ${s}%, ${l}%)`;
+        };
+
+        return randomBrightColor();
+    }
+
+
     return (
-        <ButtonContainer
-            onClick={onClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
+        <ButtonContainer>
             <TextContainer isMobile={isMobile}>
                 <HeaderContainer isMobile={isMobile}>
                 </HeaderContainer>
                 <TextElement>
-                    PLAYERS
+                    Players
                 </TextElement>
-                <PlusButton>
-                                    <CircleButton/>
+                <InnerContent>
+                    {players.map(player => (
+                        <PlayerCard key={player.id}>
+                            <PlayerControls>
+                                <CustomColorPicker player={player} updatePlayer={updatePlayer}/>
 
+                                <h3>{player.name}</h3>
+                            </PlayerControls>
+
+                            <PlayerControls>
+                                <select
+                                    value={player.controlScheme}
+                                    onChange={(e) => updatePlayer(player.id, 'controlScheme', e.target.value as ControlScheme)}
+                                >
+                                    {allControlSchemes.map(scheme => (
+                                        <option
+                                            key={scheme}
+                                            value={scheme}
+                                            disabled={!availableControlSchemes.includes(scheme)}
+                                        >
+                                            {scheme}
+                                        </option>
+                                    ))}
+                                </select>
+                                <TrashIcon onClick={() => removePlayer(player.id)}/>
+                            </PlayerControls>
+                        </PlayerCard>
+                    ))}                </InnerContent>
+                <PlusButton>
+                    <CircleButton/>
                 </PlusButton>
 
             </TextContainer>
