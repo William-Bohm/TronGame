@@ -13,6 +13,7 @@ import './TronGame.css';
 import CubeRain from "./components/animations/fallingCubes";
 import MainMenu from "./components/newAnimations/mainMenuLines/MainMenu";
 import ThreeScene3 from "./components/newAnimations/ThreeScene3";
+import GlowingDots from "./components/newAnimations/components/BackgroundGlowingDots";
 
 const AppContainer = styled.div`
   display: flex;
@@ -145,6 +146,7 @@ const TronGame2: React.FC = () => {
       <AppContainer>
         <GlobalStyles />
           <AnimatedBackground />
+          <GlowingDots />
           {/*<CubeRain/>*/}
         {introComplete ? (
             <div>

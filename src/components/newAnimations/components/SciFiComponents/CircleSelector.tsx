@@ -27,6 +27,9 @@ const ComponentWrapper = styled.div`
   align-items: center;
   gap: 20px;
     animation: ${slideDown} 1s ease-out forwards;
+        //border: 2px solid deeppink;
+    max-height: 300px;
+
 `;
 
 const TypedTitle = styled.h2`
@@ -55,6 +58,7 @@ const SliderContainer = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+    //border: 1px solid greenyellow;
 `;
 
 const CircleTrack = styled.div`

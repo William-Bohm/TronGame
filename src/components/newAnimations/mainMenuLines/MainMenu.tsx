@@ -78,12 +78,19 @@ const StartButtonsAbsoluteWrapper = styled.div`
     left: 50%;
     transform: translate(-50%, -50%);
     pointer-events: auto;
+    // border: 2px solid ${({theme}) => theme.colors.primary};
+    @media (max-width: 1000px) {
+        top: 92%;
+    }
 `;
 
 const StartButtonsRelativeWrapper = styled.div`
     display: flex;
     flex-direction: column;
     gap: 0.5rem; // Adds space between buttons
+    @media (max-width: 1000px) {
+        gap: 0;
+    }
 `;
 
 const GameSpeedWrapper = styled.div`
@@ -100,31 +107,42 @@ const UIColumnsWrapper = styled.div`
     left: 8%;
     width: 84%;
     height: 70%;
+    // border: 2px solid ${({theme}) => theme.colors.primary};
     @media (max-width: 1000px) {
         left: 0;
         width: 100vw;
-        height: 90%;
+        height: 75.5%;
         top: 10%;
         flex-direction: column;
     }
     display: flex;
     justify-content: space-between;
-    pointer-events: none; // This allows clicking through to the Three.js scene
+    align-items: center;
+    pointer-events: none;
+    
+    //scrollable
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Re-enable pointer events for direct children
+    > * {
+        pointer-events: auto;
+    }
 `;
 
 const LeftColumn = styled.div`
     position: relative;
-    width: 50%; // Adjust width as needed
+    left: 5%;
+    width: 90%; // Adjust width as needed
     @media (max-width: 1000px) {
         width: 100%;
     }
     height: 100%;
-    //padding: 20px;
     pointer-events: auto; // Re-enable pointer events for the UI elements
-    // border: 2px solid ${({theme}) => theme.colors.primary};
 //    center elements
     display: flex;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
 `;
 
@@ -529,26 +547,19 @@ const MainMenu: React.FC = () => {
                     {/*    </>*/}
                     {/*)}*/}
 
-                    {/*<CenteredText>Tronvolution</CenteredText>*/}
+                    <CenteredText>Tronvolution</CenteredText>
 
                     {/*{controlsVisible && (*/}
                     <UIColumnsWrapper>
-                        {/* Left Column */}
-                        <LeftColumn>
                             <PlayerSelector
                                 text={""}
                                 onClick={() => console.log('Button clicked!')}
                             />
-                        </LeftColumn>
-
-                        {/* Right Column */}
-                        <RightColumn>
                             <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
                             <GameBoardSelector
-                                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                                text=""
                                 onClick={() => console.log('Button clicked!')}
                             />
-                        </RightColumn>
                     </UIColumnsWrapper>
                     {/*)}*/}
 

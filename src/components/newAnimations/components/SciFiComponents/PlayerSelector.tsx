@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import styled, {keyframes} from 'styled-components';
 import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
@@ -25,22 +25,24 @@ const ButtonContainer = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: -9.5%;
+    //margin-top: -9.5%;
+    //border: 2px solid red;
 
     //padding: 5px 10px;
     transition: all 0.3s ease;
     animation: ${slideDown} 1s ease-out forwards;
     //border: 2px solid red;
 
-    //height: 100%;
+    height: 100%;
     width: 100%;
     min-width: 300px;
-    max-width: 600px;
+    max-width: 400px;
+    max-height: 500px;
 
-    aspect-ratio: 5 / 5;
-    @media (min-width: 1600px) {
-        width: 80%;
-    }
+    aspect-ratio: 4 / 5;
+    //@media (min-width: 1600px) {
+    //    width: 80%;
+    //}
 
     //@media (max-width: 1400px) {
     //    aspect-ratio: 2 / 3;
@@ -48,10 +50,10 @@ const ButtonContainer = styled.div`
     //@media (max-width: 1200px) {
     //    aspect-ratio: 3 / 5;
     //}
-    @media (max-width: 1000px) {
-        //aspect-ratio: 5 / 5;
-        width: 90%
-    }
+    //@media (max-width: 1000px) {
+    //    //aspect-ratio: 5 / 5;
+    //    width: 90%
+    //}
     //@media (max-width: 900px) {
     //    aspect-ratio: 5 / 5;
     //}
@@ -93,8 +95,8 @@ const BorderPath = styled.path<BorderPathProps>`
 
 const PlusButton = styled.div`
     position: absolute;
-    top: 82.5%;
-    left: 85%;
+    top: 80%;
+    left: 89%;
     transform: translate(-50%, -50%);
 `;
 
@@ -106,51 +108,74 @@ const TextElement = styled.div`
     font-family: 'Orbitron', sans-serif;
 
     font-weight: 500;
-    font-size: 2.3rem;
+    font-size: 1.7rem;
     width: 90%; // Control text width
 
-    @media (max-width: 1400px) {
-        left: 30%;
-    }
-
-    @media (max-width: 1250px) {
-        left: 30%;
-        font-size: 2rem;
-    }
-
-    @media (max-width: 1000px) {
-        font-size: 2.5rem;
-    }
-    @media (max-width: 650px) {
-        left: 30%;
-        font-size: 2rem;
-    }
     @media (max-width: 450px) {
         left: 30%;
+    }
+    @media (max-width: 375px) {
         font-size: 1.5rem;
     }
+
+    //@media (max-width: 1250px) {
+    //    left: 30%;
+    //    font-size: 2rem;
+    //}
+    //
+    //@media (max-width: 1000px) {
+    //    font-size: 2.5rem;
+    //}
+    //@media (max-width: 650px) {
+    //    left: 30%;
+    //    font-size: 2rem;
+    //}
+    //@media (max-width: 450px) {
+    //    left: 30%;
+    //    font-size: 1.5rem;
+    //}
 `;
 
 const InnerContent = styled.div<{ isMobile?: boolean }>`
     position: absolute;
     width: 75%;
-    height: 62%;
-    top: 28%;
+    height: 58%;
+    top: 28.5%;
     left: 6%;
     padding-left: 10px;
-    margin: 0 auto; // This will center it horizontally
-    border: 2px solid red;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     align-items: start;
-    justify-content: space-between;
+    justify-content: start;
+    overflow-y: auto; // Add this to enable vertical scrolling
+    overflow-x: hidden; // Add this to prevent horizontal scrolling if not needed
+    
+    /* Custom scrollbar styling */
+    &::-webkit-scrollbar {
+        width: 8px;
+        display: block; // Ensures scrollbar is always visible
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: ${({theme}) => theme.colors.background || '#f1f1f1'};
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: ${({theme}) => theme.colors.primary};
+        border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+        background: ${({theme}) => theme.colors.primary}dd; // Adding slight transparency on hover
+    }
 `;
 
 const TrashIcon = styled(FaTrashAlt)`
     cursor: pointer;
     color: ${({theme}) => theme.colors.primary};
     transition: color 0.1s ease;
-    margin-left: 10px;
+    //margin-left: 10px;
 
     &:hover {
         color: ${({theme}) => theme.colors.secondary};
@@ -159,43 +184,55 @@ const TrashIcon = styled(FaTrashAlt)`
 
 
 const PlayerCard = styled.div`
-    background: ${({theme}) => theme.colors.background};
-    border: 2px solid ${({theme}) => theme.colors.primary};
+    // background: ${({theme}) => theme.colors.background};
+    // border: 2px solid ${({theme}) => theme.colors.primary};
     border-radius: 10px;
-    padding: 15px;
-    margin: 10px 0;
+    padding: 5px;
+    width: 100%;
+    margin: 3px 0;
+    margin-right: 5px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    h3 {
-        margin: 0 10px;
-        color: ${({theme}) => theme.colors.primary};
-    }
-
-    p {
-        margin: 0;
-        color: ${({theme}) => theme.colors.primary};
-    }
-
-    select, input[type="color"] {
-        background: ${({theme}) => theme.colors.background};
-        color: ${({theme}) => theme.colors.primary};
-        border: 1px solid ${({theme}) => theme.colors.primary};
-        border-radius: 5px;
-        padding: 5px;
-    }
-
+    color: ${({theme}) => theme.colors.primary};
     &:hover {
-        box-shadow: 0 0 10px ${({theme}) => theme.colors.primary};
+     border: 2px solid ${({theme}) => theme.colors.primary};
     }
 `;
+
+const PlayerName = styled.div`
+    margin-right: 0;
+    color: ${({theme}) => theme.colors.primary};
+    //border: 2px solid deeppink;
+`;
+
+const CustomSelect = styled.select`
+    appearance: none; /* This removes the dropdown arrow */
+    background: transparent;
+    border-radius: 4px;
+    padding: 3px;
+    color: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+    outline: none;
+    text-align: center; /* This centers the text */
+    
+`;
+
+const SelectWrapper = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+    margin-right: 10px;
+`;
+
 
 const PlayerControls = styled.div`
     display: flex;
     align-items: center;
-    gap: 10px;
+    //gap: 10px;
 `;
 
 interface TextContainerProps {
@@ -219,6 +256,9 @@ const TextContainer = styled.div<TextContainerProps>`
     padding: 8px 8px;
     height: 100%;
     width: 100%;
+    min-width: 300px;
+    max-width: 400px;
+    max-height: 500px;
     overflow: hidden;
     clip-path: polygon(
             7% 10%,
@@ -255,7 +295,7 @@ const HeaderContainer = styled.div<TextContainerProps>`
     height: 100%;
     width: 100%;
     overflow: hidden;
-    min-width: 300px;
+    //min-width: 280px;
 
     clip-path: polygon(
             8% 11%,
@@ -312,74 +352,53 @@ const CircleMarker = styled.circle`
 //
 // Color picker
 //
-const ColorPickerWrapper = styled.div`
-    position: relative;
-    cursor: pointer;
-`;
-
-const ColorOptions = styled.div`
-    position: absolute;
-    top: 100%;
-    left: 0;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    background: #fff;
-    padding: 8px;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-`;
-
-const ColorOption = styled.div`
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    background-color: ${props => props.color};
-
-    &:hover {
-        transform: scale(1.1);
-        transition: transform 0.2s ease;
-    }
-`;
-
 interface CustomColorPickerProps {
     player: Player;
     updatePlayer: (id: number, field: keyof Player, value: any) => void;
 }
 
-const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, updatePlayer}) => {
-    const [isOpen, setIsOpen] = useState(false);
+const ColorPickerWrapper = styled.div`
+    position: relative;
+    cursor: pointer;
+    //border: 1px solid deeppink;
+    display: inline-block; // This will make it only as large as its content
+    line-height: 0; // This can help with any unexpected spacing
+`;
 
-    const handleColorSelect = (color: string) => {
-        updatePlayer(player.id, 'color', color);
-        setIsOpen(false);
+const HiddenInput = styled.input`
+    opacity: 0;
+    position: absolute;
+    width: 0;
+    height: 0;
+    visibility: hidden;
+    margin: 0;
+    padding: 0;
+    border: 0;
+`;
+
+const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, updatePlayer}) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleClick = () => {
+        inputRef.current?.click();
     };
 
     return (
-        <ColorPickerWrapper onClick={() => setIsOpen(!isOpen)}>
+        <ColorPickerWrapper onClick={handleClick}>
+            <HiddenInput
+                ref={inputRef}
+                type="color"
+                value={player.color}
+                onChange={(e) => updatePlayer(player.id, 'color', e.target.value)}
+            />
             <AnimatedRings
                 size={40}
                 isSelected={true}
                 color={player.color}
             />
-            {isOpen && (
-                <ColorOptions>
-                    {Object.entries(cssFormatColors).map(([name, color]) => (
-                        <ColorOption
-                            key={name}
-                            color={color}
-                            onClick={() => handleColorSelect(color)}
-                        />
-                    ))}
-                </ColorOptions>
-            )}
         </ColorPickerWrapper>
     );
 };
-
-
 const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                                                              text,
                                                              onClick,
@@ -615,30 +634,34 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                         <PlayerCard key={player.id}>
                             <PlayerControls>
                                 <CustomColorPicker player={player} updatePlayer={updatePlayer}/>
-
-                                <h3>{player.name}</h3>
+                                <PlayerName>{player.name}</PlayerName>
                             </PlayerControls>
 
                             <PlayerControls>
-                                <select
-                                    value={player.controlScheme}
-                                    onChange={(e) => updatePlayer(player.id, 'controlScheme', e.target.value as ControlScheme)}
-                                >
-                                    {allControlSchemes.map(scheme => (
-                                        <option
-                                            key={scheme}
-                                            value={scheme}
-                                            disabled={!availableControlSchemes.includes(scheme)}
-                                        >
-                                            {scheme}
-                                        </option>
-                                    ))}
-                                </select>
-                                <TrashIcon onClick={() => removePlayer(player.id)}/>
+                                <SelectWrapper>
+                                    <CustomSelect
+                                        value={player.controlScheme}
+                                        onChange={(e) => updatePlayer(player.id, 'controlScheme', e.target.value as ControlScheme)}
+                                    >
+                                        {allControlSchemes.map(scheme => (
+                                            <option
+                                                key={scheme}
+                                                value={scheme}
+                                                disabled={!availableControlSchemes.includes(scheme)}
+                                            >
+                                                {scheme}
+                                            </option>
+                                        ))}
+                                    </CustomSelect>
+                                    <TrashIcon onClick={() => removePlayer(player.id)}/>
+                                </SelectWrapper>
                             </PlayerControls>
                         </PlayerCard>
-                    ))}                </InnerContent>
-                <PlusButton>
+                    ))}
+                </InnerContent>
+                <PlusButton onClick={
+                    addPlayer
+                }>
                     <CircleButton/>
                 </PlusButton>
 

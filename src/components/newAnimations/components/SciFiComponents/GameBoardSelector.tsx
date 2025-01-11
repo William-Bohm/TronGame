@@ -25,8 +25,15 @@ const ButtonContainer = styled.div`
     padding: 5px 10px;
     transition: all 0.3s ease;
     animation: ${slideDown} 1s ease-out forwards;
-    height: 350px;
-    width: 300px;
+    //height: 350px;
+    //width: 300px;
+        height: 100%;
+    width: 100%;
+    min-width: 300px;
+    max-width: 400px;
+    max-height: 500px;
+    aspect-ratio: 4 / 5;
+    // border: 2px solid ${cssFormatColors.neonBlue};
 `;
 const SVGContainer = styled.svg`
     position: absolute;
@@ -73,15 +80,19 @@ const InnerContent = styled.div<{ isMobile?: boolean }>`
 
 const TextElement = styled.div`
     position: absolute;
-    top: 23%;
+    top: 22%;
     left: 33%;
     transform: translate(-50%, -50%);
     font-family: 'Orbitron', sans-serif;
     color: ${cssFormatColors.darkGrey};
 
     font-weight: 600;
-    font-size: 1.3rem;
     width: 90%; // Control text width
+    font-size: 1.7rem;
+    @media (max-width: 375px) {
+        font-size: 1.5rem;
+        left: 36%;
+    } 
 `;
 
 const HeaderContainer = styled.div<TextContainerProps>`
@@ -98,19 +109,16 @@ const HeaderContainer = styled.div<TextContainerProps>`
     min-width: 300px;
 
     clip-path: polygon(
-            6% 12%,
-            41% 12%,
-            46% 17%,
-            88% 17%,
-            83% 20%,
+            8% 12%,
+            44% 12%,
+            49% 17%,
+            93% 17%,
+            86% 20%,
             70% 20%,
-            58% 31%,
-            35% 31%,
-            30% 31%,
-            7% 31%,
-            6% 31%,
-            2% 27%,
-            2% 17%
+            58% 29%,
+            10% 29%,
+            4% 23%,
+            4% 17%
     );
 
     text-align: center;
@@ -135,8 +143,10 @@ const TextContainer = styled.div<TextContainerProps>`
     color: black;
     font-size: 1.2rem;
     transition: all 0.3s ease;
-    height: 350px;
-    width: 300px;
+    //height: 350px;
+    //width: 300px;
+        height: 100%;
+    width: 100%;
     overflow: hidden;
 
     clip-path: polygon(

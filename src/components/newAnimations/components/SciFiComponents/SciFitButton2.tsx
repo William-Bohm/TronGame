@@ -20,7 +20,8 @@ const ButtonContainer = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px 10px;
+    //padding: 5px 10px;
+    padding: 0;
     transition: all 0.3s ease;
     animation: ${slideDown} 1s ease-out forwards;
 `;
@@ -61,10 +62,13 @@ const TextContainer = styled.div<TextContainerProps>`
             ${() => toRGBA(cssFormatColors.darkGrey, 1)} 91%,
             ${() => toRGBA(cssFormatColors.darkGrey, 1)} 100%
     );
-    padding: ${props => props.isMobile ? '8px 8px' : '8px 8px'};
+    padding: 8px 8px;
     min-width: ${props => props.isMobile ? '25vw' : '60vw'};
     @media (min-width: 750px) {
         min-width: ${props => props.isMobile ? '25vw' : '50vw'};
+    }
+    @media (max-width: 750px) {
+        padding: 2px 2px;
     }
     @media (max-width: 450px) {
         min-width: ${props => props.isMobile ? '25vw' : '80vw'};
