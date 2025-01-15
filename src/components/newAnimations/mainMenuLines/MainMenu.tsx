@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useTronContext} from "../../../context/GameContext";
-import styled, {ThemeProvider} from "styled-components";
+import styled, {css, ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "../../../theme";
 import {AnimatedLine, LineSegment} from "./newLines";
 
@@ -63,25 +63,31 @@ const ToggleLinesButton = styled.button`
 `;
 
 const UIOverlay = styled.div`
-    position: absolute;
-    top: 0;
-    left: 0;
+    //position: absolute;
+    //top: 0;
+    //left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none; // This allows clicks to pass through to the scene
+    //pointer-events: none; // This allows clicks to pass through to the scene
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
     z-index: 1;
 `;
 
 const StartButtonsAbsoluteWrapper = styled.div`
-    position: absolute;
-    top: 92%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    //position: absolute;
+    //top: 92%;
+    //left: 50%;
+    //transform: translate(-50%, -50%);
     pointer-events: auto;
-    // border: 2px solid ${({theme}) => theme.colors.primary};
-    @media (max-width: 1000px) {
-        top: 92%;
-    }
+    margin-top: 5px;
+    margin-Bottom: 20px;
+        // border: 2px solid ${({theme}) => theme.colors.primary};
+    //@media (max-width: 1000px) {
+    //    top: 92%;
+    //}
 `;
 
 const StartButtonsRelativeWrapper = styled.div`
@@ -102,29 +108,38 @@ const GameSpeedWrapper = styled.div`
 `;
 
 const UIColumnsWrapper = styled.div`
-    position: absolute;
-    top: 13%;
-    left: 8%;
     width: 84%;
-    height: 70%;
-    // border: 2px solid ${({theme}) => theme.colors.primary};
+        // border: 2px solid ${({theme}) => theme.colors.primary};
+    @media (max-width: 1400px) {
+        left: 5%;
+        width: 90%;
+    }
+    @media (max-width: 1200px) {
+        width: 100%;
+    }
+
     @media (max-width: 1000px) {
-        left: 0;
-        width: 100vw;
-        height: 75.5%;
-        top: 10%;
         flex-direction: column;
+        mask-image: linear-gradient(
+                to bottom,
+                transparent 0%,
+                black 10%,
+                black 90%,
+                transparent 100%
+        );
     }
     display: flex;
     justify-content: space-between;
     align-items: center;
     pointer-events: none;
-    
+
+
     //scrollable
     overflow-y: auto;
     overflow-x: hidden;
 
     // Re-enable pointer events for direct children
+
     > * {
         pointer-events: auto;
     }
@@ -139,7 +154,7 @@ const LeftColumn = styled.div`
     }
     height: 100%;
     pointer-events: auto; // Re-enable pointer events for the UI elements
-//    center elements
+    //    center elements
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -151,11 +166,11 @@ const RightColumn = styled.div`
     width: 50%; // Adjust width as needed
     height: 100%;
     padding: 20px;
-        @media (max-width: 1000px) {
+    @media (max-width: 1000px) {
         width: 100%;
     }
     pointer-events: auto; // Re-enable pointer events for the UI elements
-    // border: 2px solid ${({theme}) => theme.colors.primary};
+        // border: 2px solid ${({theme}) => theme.colors.primary};
     //justify-content: space-between;
     align-items: center;
     justify-content: space-between;
@@ -171,6 +186,7 @@ import FuturisticButton from "../components/SciFiComponents/SciFiButton1";
 import FuturisticButton2 from "../components/SciFiComponents/SciFitButton2";
 import PlayerSelector from "../components/SciFiComponents/PlayerSelector";
 import AnimatedRings from "../components/SciFiComponents/AnimatedRings";
+import {useNavigate} from "react-router-dom";
 
 // Create the glitch animation
 const glitchAnimation = keyframes`
@@ -223,7 +239,7 @@ const moveUpAnimation = keyframes`
     }
 `;
 
-const CenteredText = styled.div`
+const CenteredText = styled.div<{ skipIntro: boolean }>`
     position: absolute;
     color: ${cssFormatColors.neonBlue};
     text-align: center;
@@ -232,9 +248,11 @@ const CenteredText = styled.div`
     font-family: 'Orbitron', sans-serif;
     transform: translate(-50%, -50%);
 
-    // Combine both animations
-    animation: ${glitchAnimation} 2s linear,
-    ${moveUpAnimation} 4s ease-in-out forwards;
+    top: ${props => props.skipIntro ? '8%' : '50%'};
+    left: 50%;
+    animation: ${props => props.skipIntro
+            ? 'none'
+            : css`${glitchAnimation} 2s linear, ${moveUpAnimation} 4s ease-in-out forwards`};
 
     @media (max-width: 1024px) {
         font-size: 51px;
@@ -245,7 +263,6 @@ const CenteredText = styled.div`
         letter-spacing: 0;
     }
 `;
-
 
 type LineConfig = {
     start: { xPercent: number; yPercent: number };
@@ -274,246 +291,49 @@ export const useIsMobile = () => {
     return isMobile;
 };
 
-// Use in component:
-const YourComponent = () => {
-    const isMobile = useIsMobile();
-    // ...rest of component
-};
+interface MainMenuProps {
+    directToMenu?: boolean;
+}
 
-const MainMenu: React.FC = () => {
-    const mountRef = useRef<HTMLDivElement>(null);
-    const [currentAnimation, setCurrentAnimation] = useState<'intro' | 'mainMenu' | 'game'>('intro');
-    const [lineGroups, setLineGroups] = useState<{ [key: string]: LineSegment[] }>({});
-    const [gameSpeed, setGameSpeed] = useState(500);
+const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
+    const navigate = useNavigate();
+    // const [gameSpeed, setGameSpeed] = useState(500);
     const isMobile = useIsMobile();
-    const [linesVisible, setLinesVisible] = useState(false);
+    const [lowerButtonsVisible, setLowerButtonsVisible] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(false);
 
     const {
         setIntroComplete,
-        introComplete
+        introComplete,
+        skipIntro,
+        gameSpeed,
+        setGameSpeed,
+        setShowGameGrid
     } = useTronContext();
 
-    const lineConfigs: LineSegmentGroup[] = [
-        {
-            id: 'line1',
-            color: '#007bff',
-            thickness: 3,
-            segments: [
-                {
-                    start: {xPercent: 35, yPercent: 100},
-                    end: {xPercent: 25, yPercent: 93}
-                },
-                {
-                    start: {xPercent: 25, yPercent: 93},
-                    end: {xPercent: 7, yPercent: 93}
-                },
-                {
-                    start: {xPercent: 7, yPercent: 93},
-                    end: {xPercent: 5, yPercent: 90}
-                },
-                {
-                    start: {xPercent: 5, yPercent: 90},
-                    end: {xPercent: 5, yPercent: 30}
-                },
-                {
-                    start: {xPercent: 5, yPercent: 30},
-                    end: {xPercent: 0, yPercent: 23}
-                },
-            ]
-        },
-        {
-            id: 'line2',
-            color: '#007bff',
-            thickness: 3,
-            segments: [
-                {
-                    start: {xPercent: 32, yPercent: 100},
-                    end: {xPercent: 25, yPercent: 95}
-                },
-                {
-                    start: {xPercent: 25, yPercent: 95},
-                    end: {xPercent: 7, yPercent: 95}
-                },
-                {
-                    start: {xPercent: 7, yPercent: 95},
-                    end: {xPercent: 5, yPercent: 92}
-                },
-                {
-                    start: {xPercent: 5, yPercent: 92},
-                    end: {xPercent: 5, yPercent: 50}
-                },
-                {
-                    start: {xPercent: 5, yPercent: 50},
-                    end: {xPercent: 4, yPercent: 50}
-                },
-                {
-                    start: {xPercent: 4, yPercent: 50},
-                    end: {xPercent: 4, yPercent: 31}
-                },
-                {
-                    start: {xPercent: 4, yPercent: 31},
-                    end: {xPercent: 0, yPercent: 25}
-                },
-            ]
-        },
-        {
-            id: 'line3',
-            color: '#007bff',
-            thickness: 3,
-            segments: [
-                {
-                    start: {xPercent: 38, yPercent: 100},
-                    end: {xPercent: 25, yPercent: 91}
-                },
-                {
-                    start: {xPercent: 25, yPercent: 91},
-                    end: {xPercent: 7, yPercent: 91}
-                },
-                {
-                    start: {xPercent: 7, yPercent: 91},
-                    end: {xPercent: 5, yPercent: 88}
-                },
-                {
-                    start: {xPercent: 5, yPercent: 88},
-                    end: {xPercent: 5, yPercent: 70}
-                },
-                {
-                    start: {xPercent: 5, yPercent: 70},
-                    end: {xPercent: 6, yPercent: 70}
-                },
-                {
-                    start: {xPercent: 6, yPercent: 70},
-                    end: {xPercent: 6, yPercent: 29}
-                },
-                {
-                    start: {xPercent: 6, yPercent: 29},
-                    end: {xPercent: 0, yPercent: 21}
-                },
-            ]
-        },
-
-        {
-            id: 'mirroredLine1',
-            color: '#007bff',
-            thickness: 3,
-            segments: [
-                {
-                    start: {xPercent: 65, yPercent: 100},
-                    end: {xPercent: 75, yPercent: 93}
-                },
-                {
-                    start: {xPercent: 75, yPercent: 93},
-                    end: {xPercent: 93, yPercent: 93}
-                },
-                {
-                    start: {xPercent: 93, yPercent: 93},
-                    end: {xPercent: 95, yPercent: 90}
-                },
-                {
-                    start: {xPercent: 95, yPercent: 90},
-                    end: {xPercent: 95, yPercent: 30}
-                },
-                {
-                    start: {xPercent: 95, yPercent: 30},
-                    end: {xPercent: 100, yPercent: 23}
-                },
-            ]
-        },
-        {
-            id: 'mirroredLine2',
-            color: '#007bff',
-            thickness: 3,
-            segments: [
-                {
-                    start: {xPercent: 68, yPercent: 100},
-                    end: {xPercent: 75, yPercent: 95}
-                },
-                {
-                    start: {xPercent: 75, yPercent: 95},
-                    end: {xPercent: 93, yPercent: 95}
-                },
-                {
-                    start: {xPercent: 93, yPercent: 95},
-                    end: {xPercent: 95, yPercent: 92}
-                },
-                {
-                    start: {xPercent: 95, yPercent: 92},
-                    end: {xPercent: 95, yPercent: 32}
-                },
-                {
-                    start: {xPercent: 95, yPercent: 32},
-                    end: {xPercent: 100, yPercent: 25}
-                },
-            ]
-        },
-        {
-            id: 'mirroredLine3',
-            color: '#007bff',
-            thickness: 3,
-            segments: [
-                {
-                    start: {xPercent: 62, yPercent: 100},
-                    end: {xPercent: 75, yPercent: 91}
-                },
-                {
-                    start: {xPercent: 75, yPercent: 91},
-                    end: {xPercent: 93, yPercent: 91}
-                },
-                {
-                    start: {xPercent: 93, yPercent: 91},
-                    end: {xPercent: 95, yPercent: 88}
-                },
-                {
-                    start: {xPercent: 95, yPercent: 88},
-                    end: {xPercent: 95, yPercent: 28}
-                },
-                {
-                    start: {xPercent: 95, yPercent: 28},
-                    end: {xPercent: 100, yPercent: 21}
-                },
-            ]
-        }
-    ];
-
-
-    useEffect(() => {
-        const updateLineSegments = () => {
-            const screenHeight = window.innerHeight;
-            const screenWidth = window.innerWidth;
-
-            const newGroups = lineConfigs.reduce((acc, group) => {
-                const convertedSegments = group.segments.map(segment => ({
-                    start: {
-                        x: (segment.start.xPercent / 100) * screenWidth,
-                        y: (segment.start.yPercent / 100) * screenHeight
-                    },
-                    end: {
-                        x: (segment.end.xPercent / 100) * screenWidth,
-                        y: (segment.end.yPercent / 100) * screenHeight
-                    },
-                }));
-
-                acc[group.id] = convertedSegments;
-                return acc;
-            }, {} as { [key: string]: LineSegment[] });
-
-            setLineGroups(newGroups);
-        };
-
-        updateLineSegments();
-        window.addEventListener('resize', updateLineSegments);
-        return () => window.removeEventListener('resize', updateLineSegments);
-    }, []);
 
     useEffect(() => {
         //     timeout 1 seconds set lines to visible
         setTimeout(() => {
-            setLinesVisible(true);
+            setLowerButtonsVisible(true);
         }, 1000);
         setTimeout(() => {
             setControlsVisible(true);
         }, 3500);
+        let isMounted = true;
+
+        setTimeout(() => {
+            // Only navigate if the component is still mounted
+            if (isMounted) {
+                setShowGameGrid(false);
+                navigate('/menu');
+            }
+        }, 4000);
+
+        // Cleanup function
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
 
@@ -524,33 +344,13 @@ const MainMenu: React.FC = () => {
             <AppContainer>
                 {/* UI Overlay */}
                 <UIOverlay>
-                    {/*{currentAnimation === 'intro' && (*/}
-                    {/*    <ButtonWrapper>*/}
-                    {/*        <SkipIntroButton*/}
-                    {/*            onClick={() => sceneManagerRef.current?.skipIntro()}*/}
-                    {/*            disabled={false}*/}
-                    {/*        >*/}
-                    {/*            Skip Intro bud*/}
-                    {/*        </SkipIntroButton>*/}
-                    {/*    </ButtonWrapper>*/}
-                    {/*)}*/}
 
-                    {/*{isMobile && linesVisible && (*/}
-                    {/*    <>*/}
-                    {/*        {lineConfigs.map(config => (*/}
-                    {/*            <AnimatedLine*/}
-                    {/*                segments={lineGroups[config.id] || []}*/}
-                    {/*                color={config.color}*/}
-                    {/*                thickness={config.thickness}*/}
-                    {/*            />*/}
-                    {/*        ))}*/}
-                    {/*    </>*/}
-                    {/*)}*/}
+                    <CenteredText skipIntro={directToMenu || skipIntro}>Tronvolution</CenteredText>
 
-                    <CenteredText>Tronvolution</CenteredText>
+                    <div style={{height: 160}}></div>
 
-                    {/*{controlsVisible && (*/}
-                    <UIColumnsWrapper>
+                    {(controlsVisible || directToMenu || skipIntro) && (
+                        <UIColumnsWrapper>
                             <PlayerSelector
                                 text={""}
                                 onClick={() => console.log('Button clicked!')}
@@ -560,11 +360,10 @@ const MainMenu: React.FC = () => {
                                 text=""
                                 onClick={() => console.log('Button clicked!')}
                             />
-                    </UIColumnsWrapper>
-                    {/*)}*/}
+                        </UIColumnsWrapper>
+                    )}
 
-
-                    {linesVisible && (
+                    {(lowerButtonsVisible || directToMenu || skipIntro) && (
                         <StartButtonsAbsoluteWrapper>
                             <StartButtonsRelativeWrapper>
                                 <FuturisticButton2
@@ -573,7 +372,7 @@ const MainMenu: React.FC = () => {
                                 />
                                 <FuturisticButton
                                     text="Start Game"
-                                    onClick={() => console.log('Button clicked!')}
+                                    onClick={() => setShowGameGrid(true)}
                                 />
                             </StartButtonsRelativeWrapper>
                         </StartButtonsAbsoluteWrapper>

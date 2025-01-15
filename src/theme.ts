@@ -14,7 +14,7 @@ export const lightTheme: DefaultTheme = {
     large: '20px',
   },
   fonts: {
-    main: '"Roboto", sans-serif',
+    main: '"Orbitron", sans-serif',  // Updated this
     code: '"Courier New", monospace',
   },
 };
@@ -32,7 +32,7 @@ export const darkTheme: DefaultTheme = {
     large: '20px',
   },
   fonts: {
-    main: '"Roboto", sans-serif',
+    main: '"Orbitron", sans-serif',  // Updated this
     code: '"Courier New", monospace',
   },
 };

@@ -232,6 +232,7 @@ const ThreeScene3: React.FC = () => {
 
     const {
         setIntroComplete,
+        setSkipIntro,
     } = useTronContext();
 
 
@@ -259,7 +260,7 @@ useEffect(() => {
 
         // Skip intro at 11.4 seconds
         if (sceneManager.elapsedTime > 11.4) {
-            skipIntro();
+            endIntro();
         }
     };
 
@@ -457,8 +458,17 @@ useEffect(() => {
     ];
 
 
+    const endIntro = () => {
+        setIntroComplete(true);
+        setTimeout(() => {
+            sceneManagerRef.current?.cleanup()
+        }, 9000);
+    };
+
+
     const skipIntro = () => {
         setIntroComplete(true);
+        setSkipIntro(true);
         setTimeout(() => {
             sceneManagerRef.current?.cleanup()
         }, 9000);

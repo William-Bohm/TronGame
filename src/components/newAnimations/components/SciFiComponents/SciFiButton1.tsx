@@ -105,7 +105,7 @@ const TextContainer = styled.div<TextContainerProps>`
 
 const LeftCircleSVGContainer = styled.svg`
     position: absolute;
-    left: 0;
+    left: 1%;
     top: 65%;
     transform: translateY(-50%);
     width: 10px;
@@ -115,7 +115,7 @@ const LeftCircleSVGContainer = styled.svg`
 
 const RightCircleSVGContainer = styled.svg`
     position: absolute;
-    right: 0;
+    right: 1%;
     top: 36%;
     transform: translateY(-50%);
     width: 10px;

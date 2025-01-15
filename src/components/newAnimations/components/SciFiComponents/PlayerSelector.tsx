@@ -117,6 +117,11 @@ const TextElement = styled.div`
     @media (max-width: 375px) {
         font-size: 1.5rem;
     }
+    
+        -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+/Edge */
+  user-select: none;  
 
     //@media (max-width: 1250px) {
     //    left: 30%;
@@ -150,22 +155,23 @@ const InnerContent = styled.div<{ isMobile?: boolean }>`
     justify-content: start;
     overflow-y: auto; // Add this to enable vertical scrolling
     overflow-x: hidden; // Add this to prevent horizontal scrolling if not needed
-    
+
     /* Custom scrollbar styling */
+
     &::-webkit-scrollbar {
         width: 8px;
         display: block; // Ensures scrollbar is always visible
     }
-    
+
     &::-webkit-scrollbar-track {
         background: ${({theme}) => theme.colors.background || '#f1f1f1'};
     }
-    
+
     &::-webkit-scrollbar-thumb {
         background: ${({theme}) => theme.colors.primary};
         border-radius: 4px;
     }
-    
+
     &::-webkit-scrollbar-thumb:hover {
         background: ${({theme}) => theme.colors.primary}dd; // Adding slight transparency on hover
     }
@@ -184,8 +190,8 @@ const TrashIcon = styled(FaTrashAlt)`
 
 
 const PlayerCard = styled.div`
-    // background: ${({theme}) => theme.colors.background};
-    // border: 2px solid ${({theme}) => theme.colors.primary};
+        // background: ${({theme}) => theme.colors.background};
+        // border: 2px solid ${({theme}) => theme.colors.primary};
     border-radius: 10px;
     padding: 5px;
     width: 100%;
@@ -196,14 +202,19 @@ const PlayerCard = styled.div`
     align-items: center;
     justify-content: space-between;
     color: ${({theme}) => theme.colors.primary};
+
     &:hover {
-     border: 2px solid ${({theme}) => theme.colors.primary};
+        border: 2px solid ${({theme}) => theme.colors.primary};
     }
 `;
 
 const PlayerName = styled.div`
     margin-right: 0;
     color: ${({theme}) => theme.colors.primary};
+            -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+/Edge */
+  user-select: none;  
     //border: 2px solid deeppink;
 `;
 
@@ -217,7 +228,10 @@ const CustomSelect = styled.select`
     cursor: pointer;
     outline: none;
     text-align: center; /* This centers the text */
-    
+        -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+/Edge */
+  user-select: none;  
 `;
 
 const SelectWrapper = styled.div`
@@ -376,7 +390,7 @@ const HiddenInput = styled.input`
     border: 0;
 `;
 
-const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, updatePlayer}) => {
+export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, updatePlayer}) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const handleClick = () => {
@@ -422,13 +436,13 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
     const [topThickSeven, setTopThickSeven] = useState<boolean>(false);
     const [topThickEight, setTopThickEight] = useState<boolean>(false);
     const [randomThickBottomBar, setRandomThickBottomBar] = useState<boolean>(false);
-    const topThickStartTime = 2000;
+    const topThickStartTime = 1000;
     const thickBarSpeed = 10;
 
     // repeated bars vars
     const [topRepeatedBars, setTopRepeatedBars] = useState<boolean>(false);
     const [bottomRepeatedBars, setBottomRepeatedBars] = useState<boolean>(false);
-    const repeatedBarsStartTimie = 3300;
+    const repeatedBarsStartTimie = 2700;
 
     // timer for lines
     useEffect(() => {
@@ -507,17 +521,19 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                 id: nextID,
                 type: type,
                 position: [0, 0] as Position,
-                name: 'player' + ' ' + (players.length + 1),
+                name: 'player' + ' ' + (nextID),
                 score: 0,
                 direction: 'right',
-                controlScheme: getUserControlScheme(),
+                controlScheme: controlScheme,
                 color: getUserDefaultColor(players),
             } as Player];
 
             newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
 
             setPlayers([...newPlayers]);
-            setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
+            if (controlScheme !== 'bot') {
+                setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
+            }
             setNewPlayer({});
 
         }
@@ -527,12 +543,23 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         if (gameStatus !== 'playing') {
             if (field === 'controlScheme') {
                 const player = players.find(player => player.id === id);
-                setAvailableControlSchemes([...availableControlSchemes, players.find(player => player.id === id)?.controlScheme as ControlScheme]);
+                const oldScheme = player?.controlScheme;
+
+                // Add old scheme back if it's not 'bot'
+                if (oldScheme !== 'bot') {
+                    setAvailableControlSchemes([...availableControlSchemes, oldScheme as ControlScheme]);
+                }
+
+                // Remove new scheme from available if it's not 'bot'
+                if (value !== 'bot') {
+                    setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== value));
+                }
+
                 if (value === 'bot') {
-                    console.log('set player to bot now')
                     setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'bot'} : p));
-                } else if (player?.type === 'bot' && value !== 'bot')
+                } else if (player?.type === 'bot' && value !== 'bot') {
                     setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'human'} : p));
+                }
             } else {
                 setPlayers(players.map(p => p.id === id ? {...p, [field]: value} : p));
             }
@@ -540,18 +567,18 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         }
     };
 
-
     const removePlayer = (id: number) => {
+        console.log('remove player')
         try {
             if (gameStatus !== 'playing') {
                 resetGame();
+                const controlScheme = players.find(player => player.id === id)?.controlScheme;
                 let newPlayers = players.filter(player => player.id !== id);
                 newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
-                const controlScheme = players.find(player => player.id === id)?.controlScheme;
                 setPlayers([...newPlayers]);
 
-                if (controlScheme !== 'bot') {
-                    setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
+                if (controlScheme && controlScheme !== 'bot') {
+                    setAvailableControlSchemes([...availableControlSchemes, controlScheme]);
                 }
             }
         } catch (e) {
@@ -570,10 +597,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
     function getUserDefaultColor(players: Player[]): string {
         const neonColors = [
             "#FF00FF", // Magenta
-            "#00FFFF", // Cyan
-            "#FF0000", // Red
             "#00FF00", // Lime
-            "#0000FF", // Blue
             "#FFFF00", // Yellow
             "#FE01B1", // Pink
             "#01FFFE", // Aqua
@@ -588,6 +612,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
             "#FF69B4", // Hot pink
             "#00CED1", // Dark turquoise
             "#7FFF00", // Chartreuse
+            "#FF0000", // Red
             "#FF6347", // Tomato
             "#00BFFF", // Deep sky blue
             "#FF00FF", // Fuchsia
@@ -595,9 +620,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
             "#FF1493", // Deep pink
             "#00FF00", // Lime (again, very noticeable)
             "#FF4081", // Pink (Material Design)
-            "#64FFDA", // Teal (Material Design)
             "#FF3D00", // Deep Orange (Material Design)
-            "#00E5FF", // Cyan (Material Design)
             "#76FF03"  // Light Green (Material Design)
         ];
 

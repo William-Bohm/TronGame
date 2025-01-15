@@ -28,6 +28,7 @@ const ComponentWrapper = styled.div`
   gap: 20px;
     animation: ${slideDown} 1s ease-out forwards;
         //border: 2px solid deeppink;
+    padding: 0 40px;
     max-height: 300px;
 
 `;
@@ -189,7 +190,7 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
         let startTime: number;
         const duration = 2000; // 2 seconds in milliseconds
         const startValue = 0;
-        const targetValue = 500;
+        const targetValue = value;
 
         const animate = (currentTime: number) => {
             if (!startTime) startTime = currentTime;

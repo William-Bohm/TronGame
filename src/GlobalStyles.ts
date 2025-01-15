@@ -32,11 +32,12 @@ const GlobalStyles = createGlobalStyle`
         text-decoration: none;
     }
 
-    button {
-        font-family: inherit;
-    }
-
-
+    //@font-face {
+    //    font-family: 'Orbitron';
+    //    src: url('/font/Orbitron/Orbitron-VariableFont_wght.ttf') format('truetype');
+    //    font-weight: 100 900;
+    //    font-style: normal;
+    //}
 `;
 
 export default GlobalStyles;
