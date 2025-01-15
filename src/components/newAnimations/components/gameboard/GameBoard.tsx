@@ -4,9 +4,17 @@ import {useNavigate} from "react-router-dom";
 import {useTronContext} from "../../../../context/GameContext";
 import {rgba} from "polished";
 import {SciFiButton} from "./backToSettingsButton";
-import PlayerScoreComponent from "../SciFiComponents/PlayerScoreComponent";
+import {LeftPlayerScoreComponent, PlayerScoreComponents} from "../SciFiComponents/PlayerScoreComponents";
+import {
+    BottomLeftPlayerScoreComponent,
+    BottomRightPlayerScoreComponent
+} from "../SciFiComponents/BottomPlayerScoreComponents";
 
-const GameBoardContainer = styled.div`
+interface GameBoardContainerProps {
+    playerCount: number;
+}
+
+const GameBoardContainer = styled.div<GameBoardContainerProps>`
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -15,7 +23,56 @@ const GameBoardContainer = styled.div`
     width: 100%;
     padding: 20px;
     box-sizing: border-box;
-        // background-color: ${({theme}) => theme.colors.background};
+    //border: 1px solid deeppink;
+    @media screen and (min-width: 1400px) {
+        ${props => props.playerCount > 4 && `
+            flex-direction: row;
+            justify-content: space-between;
+        `}
+    }
+`;
+
+const PlayersContainer = styled.div<GameBoardContainerProps>`
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+    align-items: center; // Add this to center children horizontally
+    //border: 2px solid red;
+    
+    @media screen and (min-width: 1400px) {
+        ${props => props.playerCount <= 4 && `
+            flex-direction: row;
+            justify-content: space-between;
+            width: 800px;
+        `}
+    }
+
+    @media screen and (min-width: 935px) and (max-width: 1399px) {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between; // Change to center instead of space-between
+        //gap: 20px; // Add some spacing between sections
+        width: 100%;
+        max-width: 750px;
+    }
+    @media screen and (min-width: 805px) and (max-width: 935px) {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between; // Change to center instead of space-between
+        //gap: 20px; // Add some spacing between sections
+        width: 80vw;
+    }
+
+`;
+
+const PlayerSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center; // Add this to center children horizontally
+
+    //@media screen and (min-width: 805px) and (max-width: 1399px) {
+    //    width: 45%;
+    //}
 `;
 
 const SettingsButtonContainer = styled.div`
@@ -26,8 +83,8 @@ const SettingsButtonContainer = styled.div`
 
 const CanvasContainer = styled.div`
     position: relative;
-    width: 100%;
-    height: calc(100% - 70px); // Subtract space for button and padding
+    //width: 100%;
+    //height: calc(100% - 70px); // Subtract space for button and padding
     display: flex;
     justify-content: center;
     align-items: center;
@@ -64,6 +121,63 @@ const GameBoard2: React.FC = () => {
     const [boardWidth, setBoardWidth] = useState(0);
     const [cellSize, setCellSize] = useState(0);
 
+    // player score left and right
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const quarterPoint = Math.ceil(players.length / 4);
+    const midpoint = Math.ceil(players.length / 2);
+
+    // For screens 805-1400px
+    const topLeftPlayers = players.slice(0, quarterPoint);
+    const topRightPlayers = players.slice(quarterPoint, midpoint);
+    const bottomLeftPlayers = players.slice(midpoint, midpoint + quarterPoint);
+    const bottomRightPlayers = players.slice(midpoint + quarterPoint);
+    const [spaceTakenUpByPlayerScoresHorizontal, setSpaceTakenUpByPlayerScoresHorizontal] = useState(0);
+    const [spaceTakenUpByPlayerScoresVertical, setSpaceTakenUpByPlayerScoresVertical] = useState(0);
+
+    useEffect(() => {
+        const calculateScoreSpace = () => {
+            if (window.innerWidth > 1400) {
+                // On large screens, scores are horizontal
+                setSpaceTakenUpByPlayerScoresHorizontal(0); // Fixed width for 2 players side by side
+                setSpaceTakenUpByPlayerScoresVertical(0);
+            } else if (window.innerWidth >= 805) {
+                // Medium screens - 2 players per row
+                const numberOfRows = Math.ceil((players.length) / 4);
+                setSpaceTakenUpByPlayerScoresHorizontal(0);
+                if (players.length > 4) {
+                    setSpaceTakenUpByPlayerScoresVertical(numberOfRows * 70); // 70px height per row
+                } else {
+                    setSpaceTakenUpByPlayerScoresVertical(0); // 70px height per row
+
+                }
+            } else {
+                // Small screens - 1 player per row
+                setSpaceTakenUpByPlayerScoresHorizontal(0);
+                setSpaceTakenUpByPlayerScoresVertical((players.length / 2) * 70); // 70px height per player
+            }
+        };
+
+        calculateScoreSpace();
+        window.addEventListener('resize', calculateScoreSpace);
+        return () => {
+            window.removeEventListener('resize', calculateScoreSpace);
+        };
+    }, [players]);
+
+
+    // For screens <805px or >1400px
+    const topPlayers = players.slice(0, midpoint);
+    const bottomPlayers = players.slice(midpoint);
     //
     // resize the board
     //
@@ -76,28 +190,26 @@ const GameBoard2: React.FC = () => {
     }, []);
 
     const calculateBoardSize = () => {
-        const maxWidth = Math.min(window.innerWidth * (8 / 10), window.innerHeight * (8 / 10));
+        const availableWidth = window.innerWidth * (8 / 10) - spaceTakenUpByPlayerScoresHorizontal;
+        const availableHeight = window.innerHeight * (8 / 10) - spaceTakenUpByPlayerScoresVertical;
+        const maxWidth = Math.min(availableWidth, availableHeight);
         const cellSize = Math.floor(maxWidth / gridSize.width);
         const actualWidth = cellSize * gridSize.width;
         return {boardWidth: actualWidth, cellSize};
     };
 
-    // handle grid dimension resizing
     useEffect(() => {
         const handleResize = () => {
             const {boardWidth, cellSize} = calculateBoardSize();
-
             setBoardWidth(boardWidth);
             setCellSize(cellSize);
         };
-
         handleResize(); // Initial calculation
         window.addEventListener('resize', handleResize);
-
         return () => {
             window.removeEventListener('resize', handleResize);
         };
-    }, [gridSize]);
+    }, [gridSize, spaceTakenUpByPlayerScoresHorizontal, spaceTakenUpByPlayerScoresVertical]);
 
     // handle viewport dimension changes..... MAYBE
     useEffect(() => {
@@ -278,17 +390,68 @@ const GameBoard2: React.FC = () => {
     }, [gameStatus]);
 
     return (
-        <GameBoardContainer>
+        <GameBoardContainer playerCount={players.length}>
             <SettingsButtonContainer>
                 <SciFiButton onClick={() => navigate('/menu')}/>
             </SettingsButtonContainer>
 
-            {players.map((player => (
-                <PlayerScoreComponent player={player}/>
-            )))}
-            {/*<CanvasContainer>*/}
-            {/*    <StyledCanvas ref={canvasRef}/>*/}
-            {/*</CanvasContainer>*/}
+            {/* Top players */}
+            <PlayersContainer playerCount={players.length}>
+                {(windowWidth >= 805 && windowWidth < 1400)  || (windowWidth >= 1400 && players.length <= 4) ? (
+                    <>
+                        <PlayerSection>
+                            {topLeftPlayers.map(player => (
+                                <LeftPlayerScoreComponent player={player}/>
+                            ))}
+                        </PlayerSection>
+                        <PlayerSection>
+                            {topRightPlayers.map(player => (
+                                <PlayerScoreComponents player={player}/>
+                            ))}
+                        </PlayerSection>
+                    </>
+                ) : (
+                    <PlayerSection>
+                        {topPlayers.map(player => (
+                            <LeftPlayerScoreComponent player={player}/>
+                        ))}
+                    </PlayerSection>
+                )}
+            </PlayersContainer>
+
+            <CanvasContainer>
+                <StyledCanvas ref={canvasRef}/>
+            </CanvasContainer>
+
+            {/* Bottom players */}
+            <PlayersContainer playerCount={players.length}>
+                {(windowWidth >= 805 && windowWidth < 1400) || (windowWidth >= 1400 && players.length <= 4) ? (
+                    <>
+                        <PlayerSection>
+                            {bottomLeftPlayers.map(player => (
+                                <BottomLeftPlayerScoreComponent player={player}/>
+                            ))}
+                        </PlayerSection>
+                        <PlayerSection>
+                            {bottomRightPlayers.map(player => (
+                                <BottomRightPlayerScoreComponent player={player}/>
+                            ))}
+                        </PlayerSection>
+                    </>
+                ) : windowWidth >= 1400 ? (
+                    <PlayerSection>
+                        {bottomPlayers.map(player => (
+                            <PlayerScoreComponents player={player}/>
+                        ))}
+                    </PlayerSection>
+                ) : (
+                    <PlayerSection>
+                        {bottomPlayers.map(player => (
+                            <BottomRightPlayerScoreComponent player={player}/>
+                        ))}
+                    </PlayerSection>
+                )}
+            </PlayersContainer>
         </GameBoardContainer>
     );
 };

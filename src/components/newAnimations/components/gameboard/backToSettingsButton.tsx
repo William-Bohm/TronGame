@@ -38,6 +38,9 @@ const ButtonText = styled.span`
     color: ${cssFormatColors.neonBlue};
   transition: all 0.3s ease;
     margin-left: -5px;
+      @media (max-width: 1175px) {
+    display: none;
+  }
 `;
 
 interface SciFiButtonProps {

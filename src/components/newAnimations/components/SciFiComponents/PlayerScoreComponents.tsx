@@ -22,11 +22,13 @@ const ButtonContainer = styled.div`
     display: flex;
     align-items: end;
     justify-content: center;
-    //padding: 5px 10px;
     padding: 0;
     transition: all 0.3s ease;
     animation: ${slideDown} 1s ease-out forwards;
+    //border: 1px solid greenyellow;
+    min-height: 60px;
     height: 60px;
+    min-width: 320px;
     width: 320px;
 `;
 const SVGContainer = styled.svg`
@@ -87,19 +89,32 @@ const TextContainer = styled.div<TextContainerProps>`
     display: flex;
     justify-content: space-between;
     align-content: space-between;
-
     text-align: left;
+`;
 
-        // ${ButtonContainer}:hover & {
-    //     color: black;
-    //     background: linear-gradient(
-    //             90deg,
-        //             ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 0%,
-        //             ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 25%,
-        //             ${() => toRGBA(cssFormatColors.neonBlue, 0.9)} 75%,
-        //             ${() => toRGBA(cssFormatColors.neonBlue, 0.3)} 100%
-    //     );
-    // }
+const LeftTextContainer = styled.div<TextContainerProps>`
+    font-family: 'Orbitron', sans-serif;
+    background: ${() => toRGBA(cssFormatColors.neonBlue, 0.2)};
+    padding: 8px 30px 8px 20px;
+        // min-width: ${props => props.isMobile ? '25vw' : '300px'};
+    height: 45px;
+    width: 300px;
+    white-space: nowrap;
+    margin: 0;
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    clip-path: polygon(
+            0% 0%,
+            95% 0%,
+            100% 100%,
+            5% 100%
+    );
+    flex-direction: row;
+    display: flex;
+    justify-content: space-between;
+    align-content: space-between;
+    text-align: left;
 `;
 
 
@@ -130,7 +145,7 @@ const CircleMarker = styled.circle`
 `;
 
 
-const PlayerScoreComponent: React.FC<FuturisticButtonProps> = ({
+export const PlayerScoreComponents: React.FC<FuturisticButtonProps> = ({
                                                                    player
                                                                }) => {
     const isMobile = useIsMobile();
@@ -217,4 +232,90 @@ const PlayerScoreComponent: React.FC<FuturisticButtonProps> = ({
         </ButtonContainer>
     );
 };
-export default PlayerScoreComponent;
+
+export const LeftPlayerScoreComponent: React.FC<FuturisticButtonProps> = ({
+                                                                   player
+                                                               }) => {
+    const isMobile = useIsMobile();
+    const [isHovered, setIsHovered] = useState<boolean>(false);
+    const [showBaseLines, setShowBaseLines] = useState<boolean>(false);
+    const [showMediumLines, setShowMediumLines] = useState<boolean>(false);
+    const [showLargeLines, setShowLargeLines] = useState<boolean>(false);
+    // timer for lines
+    useEffect(() => {
+        setTimeout(() => {
+            setShowBaseLines(true);
+        }, 0);
+
+        setTimeout(() => {
+            setShowMediumLines(true);
+        }, 1000);
+
+        setTimeout(() => {
+            setShowLargeLines(true);
+        }, 1300);
+    }, []);
+
+    return (
+        <ButtonContainer
+            // onClick={onClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <LeftTextContainer isMobile={isMobile}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center'
+                }}>
+                    <AnimatedRings
+                        size={40}
+                        isSelected={true}
+                        color={player.color}
+                    />
+                    <div style={{paddingLeft: 6}}>{player.name}
+                    </div>
+                </div>
+                <div>{player.score}</div>
+            </LeftTextContainer>
+            <div>
+                <SVGContainer viewBox="0 0 100 100" preserveAspectRatio="none">
+                    {showBaseLines && (<BorderPath
+                        d={`
+        M 96 100
+        L 91 24
+        L 0 24
+    `}
+                        animationSpeed={10} // 12 is good
+                        strokeWidth={2}/>)}
+
+                    {showMediumLines && (
+                        <BorderPath
+                            d={`
+        M 75 24
+        L 74 21
+        L 0 21
+    `}
+                            animationSpeed={10} // 12 is good
+                            strokeWidth={5}/>
+                    )}
+
+                    {showLargeLines && (
+                        <BorderPath
+                            d={`
+        M 45 22                 
+        L 44 17
+        L 0 17
+    `}
+                            animationSpeed={10} // 12 is good
+                            strokeWidth={10}/>
+                    )}
+
+
+                </SVGContainer>
+            </div>
+
+
+        </ButtonContainer>
+    );
+};
+
