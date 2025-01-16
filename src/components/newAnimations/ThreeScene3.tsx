@@ -24,9 +24,9 @@ const SkipIntroButton = styled.button<{ fadeOut: boolean }>`
     background: ${({theme}) => theme.colors.background};
     color: ${({theme}) => theme.colors.primary};
     border: 2px solid ${({theme}) => theme.colors.primary};
-    box-shadow: 0 0 10px ${({theme}) => theme.colors.primary};
+    // box-shadow: 0 0 10px ${({theme}) => theme.colors.primary};
     border-radius: 10px;
-    padding: 10px 20px;
+    padding: 10px 15px;
     font-size: 1.2rem;
     cursor: pointer;
     transition: background 0.2s ease-in-out, opacity 0.5s ease-in-out;
@@ -491,7 +491,7 @@ useEffect(() => {
                             disabled={false}
                             fadeOut={buttonFadeOut}
                         >
-                            Skip Intro bud
+                            Skip Intro
                         </SkipIntroButton>
                     )}
                     {/*    {isMobile && (*/}

@@ -62,6 +62,7 @@ const TextContainer = styled.div<TextContainerProps>`
             ${() => toRGBA(cssFormatColors.darkGrey, 1)} 91%,
             ${() => toRGBA(cssFormatColors.darkGrey, 1)} 100%
     );
+    // background: ${cssFormatColors.neonBlue};
     padding: 8px 8px;
     min-width: ${props => props.isMobile ? '25vw' : '60vw'};
     @media (min-width: 750px) {
@@ -80,10 +81,10 @@ const TextContainer = styled.div<TextContainerProps>`
     font-size: 1.2rem;
     transition: all 0.3s ease;
     clip-path: polygon(
-            15% 0%,
-            90% 0%,
-            85% 100%,
-            10% 100%
+            15% 5%,
+            90.5% 5%,
+            85% 95%,
+            9.5% 95%
     );
     //min-width: 200px;
 

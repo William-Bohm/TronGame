@@ -19,7 +19,7 @@ const directions: Direction[] = ['up', 'down', 'left', 'right'];
 
 export type GameStatus = 'waiting' | 'playing' | 'gameOver';
 
-interface PlayerMove {
+export interface PlayerMove {
     x: number;
     y: number;
     player_id: number;
@@ -58,7 +58,7 @@ interface TronContextType {
     setGameSpeed: (speed: number) => void;
 
     setDefaultSettings: () => void;
-    startGame: () => void;
+    startGame: () => Player[];
     resetGame: () => void;
     gameLoop: () => void;
     updateGridSize: (width: number, height: number) => void;
@@ -82,6 +82,7 @@ interface TronContextType {
     setSkipIntro: (skipIntro: boolean) => void;
 
     playerPositions: PlayerMove[];
+    setPlayerPositions: (playerPositions: PlayerMove[]) => void;
     showGameGrid: boolean;
     setShowGameGrid: (showGameGrid: boolean) => void;
 }
@@ -110,7 +111,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
     const [gameSpeed, setGameSpeed] = useState(500);
     const [modelInitialized, setModelInitialized] = useState(false);
     const [availableControlSchemes, setAvailableControlSchemes] = useState<ControlScheme[]>([
-         'yghj', 'ijkl', "pl;'", 'numpad', 'bot'
+        'yghj', 'ijkl', "pl;'", 'numpad', 'bot'
     ]);
     const allControlSchemes = ['wasd', 'yghj', 'arrows', 'ijkl', "pl;'", 'numpad', 'bot'] as const;
     const controlSchemeMappings: ControlSchemesMapping = {
@@ -154,7 +155,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
 
         // Set up default players
         let defaultPlayers: Player[] = [
-                        {
+            {
                 id: 1,
                 type: 'human',
                 name: 'Player 1',
@@ -180,8 +181,8 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
 
         // Place players on the grid
         defaultPlayers.forEach(player => {
-          const [x, y] = player.position;
-          newGrid[y][x] = player.id;
+            const [x, y] = player.position;
+            newGrid[y][x] = player.id;
         });
 
         setGameStatus('waiting');
@@ -190,10 +191,11 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
 
     const startGame = () => {
         // Initialize game grid, reset players, etc.
-        resetGame();
+        let resetPlayers = resetGame();
         setGameStatus('playing');
         isGameRunning.current = true;
         console.log("starting game")
+        return resetPlayers;
     };
 
     function calculatePlayerStartPositions(
@@ -233,7 +235,6 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
                 direction = y > centerY ? 'up' : 'down';
             }
 
-
             return {
                 ...player,
                 position: [x, y] as Position,
@@ -258,12 +259,14 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
         let newGrid = Array(gridSize.height).fill(null).map(() =>
             Array(gridSize.width).fill(0)
         );
-        // for (let player of resetPlayers) {
-        //   const [x, y] = player.position;
-        //   newGrid[y][x] = player.id;
-        // }
+        for (let player of resetPlayers) {
+            const [x, y] = player.position;
+            newGrid[y][x] = player.id;
+        }
 
         setGameGrid(newGrid);
+
+        return resetPlayers;
     };
 
     const changePlayerDirection = (playerId: number, direction: Direction) => {
@@ -324,7 +327,6 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
     };
 
     const gameLoop = async () => {
-
         if (gameStatus !== 'playing') {
             return;
         }
@@ -439,7 +441,34 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
                 // Update game grid only if no collision
                 newGrid[newY][newX] = player.id;
                 player.position = [newX, newY];
+            }
+        });
 
+        // check if any players are trying to access the same coodirnates
+        const positionMap = new Map<string, number[]>(); // Maps position string to array of player IDs
+
+// Build position map
+        newPlayers.forEach(player => {
+            if (!player.alive) return;
+            const posKey = `${player.position[0]},${player.position[1]}`;
+
+            if (!positionMap.has(posKey)) {
+                positionMap.set(posKey, [player.id]);
+            } else {
+                positionMap.get(posKey)?.push(player.id);
+            }
+        });
+
+// Check for collisions
+        positionMap.forEach((playerIds, position) => {
+            if (playerIds.length > 1) {
+                // If multiple players are in the same position, mark them all as not alive
+                playerIds.forEach(id => {
+                    const player = newPlayers.find(p => p.id === id);
+                    if (player) {
+                        player.alive = false;
+                    }
+                });
             }
         });
 
@@ -525,6 +554,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
         skipIntro,
         setSkipIntro,
         playerPositions,
+        setPlayerPositions,
         showGameGrid,
         setShowGameGrid
     };

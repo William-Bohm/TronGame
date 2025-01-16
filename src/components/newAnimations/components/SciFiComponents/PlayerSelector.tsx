@@ -8,6 +8,7 @@ import {darken, lighten} from "polished";
 import {ControlScheme, Player, Position, useTronContext} from "../../../../context/GameContext";
 import {FaTrashAlt} from "react-icons/fa";
 import AnimatedRings from "./AnimatedRings";
+import {withSound} from "../../../../TronGame2";
 
 interface FuturisticButtonProps {
     text: string;
@@ -117,11 +118,11 @@ const TextElement = styled.div`
     @media (max-width: 375px) {
         font-size: 1.5rem;
     }
-    
-        -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;  
+
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none;
 
     //@media (max-width: 1250px) {
     //    left: 30%;
@@ -211,11 +212,29 @@ const PlayerCard = styled.div`
 const PlayerName = styled.div`
     margin-right: 0;
     color: ${({theme}) => theme.colors.primary};
-            -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;  
-    //border: 2px solid deeppink;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+`;
+
+const PlayerNameInput = styled.input`
+    margin-right: 0;
+    color: ${({theme}) => theme.colors.primary};
+    font-family: inherit;
+    font-size: inherit;
+    background: transparent;
+    border: none;
+    width: 100%;
+    max-width: 200px;
+    z-index: 1000;
+
+    &:focus {
+        outline: none;
+        border-bottom: 2px solid ${({theme}) => theme.colors.primary};
+        box-shadow: 0 2px 8px -4px ${({theme}) => theme.colors.primary};
+    }
 `;
 
 const CustomSelect = styled.select`
@@ -228,10 +247,10 @@ const CustomSelect = styled.select`
     cursor: pointer;
     outline: none;
     text-align: center; /* This centers the text */
-        -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;  
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none;
 `;
 
 const SelectWrapper = styled.div`
@@ -413,6 +432,48 @@ export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, upd
         </ColorPickerWrapper>
     );
 };
+
+const EditablePlayerName = ({ player, updatePlayer }: { player: Player, updatePlayer: (id: number, field: keyof Player, value: any) => void }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempName, setTempName] = useState(player.name);
+    const MAX_LENGTH = 20;
+
+    const handleBlur = () => {
+        setIsEditing(false);
+        updatePlayer(player.id, 'name', tempName);
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTempName(e.target.value.slice(0, MAX_LENGTH));
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleBlur();
+        }
+    };
+
+    return (
+        <>
+            {isEditing ? (
+                <PlayerNameInput
+                    type="text"
+                    value={tempName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    maxLength={MAX_LENGTH}
+                    autoFocus
+                />
+            ) : (
+                <PlayerName onClick={() => setIsEditing(true)}>
+                    {player.name}
+                </PlayerName>
+            )}
+        </>
+    );
+};
+
 const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                                                              text,
                                                              onClick,
@@ -526,6 +587,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                 direction: 'right',
                 controlScheme: controlScheme,
                 color: getUserDefaultColor(players),
+                alive: true,
             } as Player];
 
             newPlayers = calculatePlayerStartPositions(newPlayers, gridSize);
@@ -535,6 +597,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                 setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
             }
             setNewPlayer({});
+            console.log(players);
 
         }
     };
@@ -545,28 +608,40 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                 const player = players.find(player => player.id === id);
                 const oldScheme = player?.controlScheme;
 
+                // Create new array of control schemes
+                let newSchemes = [...availableControlSchemes];
+
                 // Add old scheme back if it's not 'bot'
                 if (oldScheme !== 'bot') {
-                    setAvailableControlSchemes([...availableControlSchemes, oldScheme as ControlScheme]);
+                    newSchemes.push(oldScheme as ControlScheme);
                 }
 
-                // Remove new scheme from available if it's not 'bot'
+                // Remove new scheme if it's not 'bot'
                 if (value !== 'bot') {
-                    setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== value));
+                    newSchemes = newSchemes.filter(scheme => scheme !== value);
                 }
 
-                if (value === 'bot') {
-                    setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'bot'} : p));
-                } else if (player?.type === 'bot' && value !== 'bot') {
-                    setPlayers(players.map(p => p.id === id ? {...p, [field]: value, type: 'human'} : p));
-                }
+                console.log('Updated schemes:', newSchemes);
+                setAvailableControlSchemes(newSchemes);
+
+                // Update player with new control scheme
+                setPlayers(players.map(p => {
+                    if (p.id === id) {
+                        if (value === 'bot') {
+                            return {...p, controlScheme: value, type: 'bot'};
+                        } else if (player?.type === 'bot' && value !== 'bot') {
+                            return {...p, controlScheme: value, type: 'human'};
+                        } else {
+                            return {...p, controlScheme: value};
+                        }
+                    }
+                    return p;
+                }));
             } else {
                 setPlayers(players.map(p => p.id === id ? {...p, [field]: value} : p));
             }
-
         }
     };
-
     const removePlayer = (id: number) => {
         console.log('remove player')
         try {
@@ -591,7 +666,11 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
     function getUserControlScheme(): ControlScheme {
         const usedSchemes = players.map(player => player.controlScheme);
         const availableSchemes = availableControlSchemes.filter(scheme => !usedSchemes.includes(scheme));
-        return availableSchemes[0];
+        if (availableSchemes.length > 0) {
+            return availableSchemes[0];
+        } else {
+            return 'bot';
+        }
     }
 
     function getUserDefaultColor(players: Player[]): string {
@@ -657,7 +736,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                         <PlayerCard key={player.id}>
                             <PlayerControls>
                                 <CustomColorPicker player={player} updatePlayer={updatePlayer}/>
-                                <PlayerName>{player.name}</PlayerName>
+                                <EditablePlayerName player={player} updatePlayer={updatePlayer}/>
                             </PlayerControls>
 
                             <PlayerControls>
@@ -676,15 +755,20 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                                             </option>
                                         ))}
                                     </CustomSelect>
-                                    <TrashIcon onClick={() => removePlayer(player.id)}/>
+                                    <TrashIcon
+                                        // onClick={() => removePlayer(player.id)}
+                                        onClick={() => withSound(() => removePlayer(player.id))()}
+
+                                    />
                                 </SelectWrapper>
                             </PlayerControls>
                         </PlayerCard>
                     ))}
                 </InnerContent>
-                <PlusButton onClick={
-                    addPlayer
-                }>
+                <PlusButton
+                    // onClick={addPlayer}
+                    onClick={() => withSound(() => addPlayer())()}
+                >
                     <CircleButton/>
                 </PlusButton>
 

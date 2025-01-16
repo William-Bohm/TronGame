@@ -2,6 +2,7 @@ import React, {useState, useRef, useEffect} from 'react';
 import styled, {keyframes} from 'styled-components';
 import {cssFormatColors, toRGBA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
+import {useTronContext} from "../../../../context/GameContext";
 
 
 interface CircleSliderProps {
@@ -12,44 +13,52 @@ interface CircleSliderProps {
 }
 
 const typeAnimation = keyframes`
-  from { width: 0 }
-  to { width: 100% }
+    from {
+        width: 0
+    }
+    to {
+        width: 100%
+    }
 `;
 
 const cursorAnimation = keyframes`
-  from, to { border-color: transparent }
-  50% { border-color: ${cssFormatColors.neonBlue} }
+    from, to {
+        border-color: transparent
+    }
+    50% {
+        border-color: ${cssFormatColors.neonBlue}
+    }
 `;
 
 const ComponentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
     animation: ${slideDown} 1s ease-out forwards;
-        //border: 2px solid deeppink;
+    //border: 2px solid deeppink;
     padding: 0 40px;
     max-height: 300px;
 
 `;
 
 const TypedTitle = styled.h2`
-  font-family: 'Orbitron', sans-serif;
-  color: ${cssFormatColors.neonBlue};
-  text-align: center;
-  margin: 0;
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-bottom: 10px;
-  animation: ${typeAnimation} 1s steps(40, end);
-  animation-delay: 1s;     /* Adds a 1-second delay before the animation starts */
-  width: 0;               /* Important: ensures the text starts hidden */
-  animation-fill-mode: forwards;  /* Keeps the final state after animation ends */
-    -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;  
+    font-family: 'Orbitron', sans-serif;
+    color: ${cssFormatColors.neonBlue};
+    text-align: center;
+    margin: 0;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 10px;
+    animation: ${typeAnimation} 1s steps(40, end);
+    animation-delay: 1s; /* Adds a 1-second delay before the animation starts */
+    width: 0; /* Important: ensures the text starts hidden */
+    animation-fill-mode: forwards; /* Keeps the final state after animation ends */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none;
 `;
 
 const SliderContainer = styled.div`
@@ -132,12 +141,40 @@ const Value = styled.div`
     color: ${cssFormatColors.neonBlue};
     text-shadow: 0 0 10px ${cssFormatColors.neonBlue};
     font-family: 'Orbitron', sans-serif;
-          -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;   
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+        z-index: 1000;
+    cursor: pointer; // Add this
 `;
 
+const Input = styled.input`
+    font-size: 32px;
+    color: ${cssFormatColors.neonBlue};
+    text-shadow: 0 0 10px ${cssFormatColors.neonBlue};
+    font-family: 'Orbitron', sans-serif;
+    text-align: center;
+    max-width: 80px;
+    z-index: 1000;
+    background: transparent;
+    width: 100%;
+    border: none;
+    -moz-appearance: textfield; /* Remove arrows in Firefox */
+    
+    /* Remove arrows in Chrome, Safari, Edge, Opera */
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    &:focus {
+        outline: none;
+        border-bottom: none;
+        // box-shadow: 0 2px 8px ${cssFormatColors.neonBlue};
+    }
+`;
 
 const MarkerLine = styled.div<{ angle: number }>`
     position: absolute;
@@ -163,10 +200,10 @@ const Marker = styled.div<{ angle: number }>`
 `;
 
 const MarkerValue = styled.div`
-      -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;    
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none;
 `;
 
 export const CircleSlider: React.FC<CircleSliderProps> = ({
@@ -177,6 +214,12 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
                                                           }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+
+
+    const {
+        setGameSpeed
+    } = useTronContext();
 
     const handleMouseDown = () => {
         setIsDragging(true);
@@ -253,9 +296,16 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
     const progress = (value - min) / (max - min);
     const angle = progress * 360;
 
+    const handleValueChange = (newValue: number) => {
+    if (newValue < 1) setGameSpeed(1);
+    else if (newValue >= 1000) setGameSpeed(999);
+    else setGameSpeed(newValue);
+};
+
+
     return (
-    <ComponentWrapper>
-        <TypedTitle>Game Speed</TypedTitle>
+        <ComponentWrapper>
+            <TypedTitle>Game Speed</TypedTitle>
             <SliderContainer ref={containerRef}>
                 <CircleTrack/>
                 <CircleProgress progress={progress}/>
@@ -265,23 +315,34 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
                 >
                 </Handle>
                 <DottedInnerCircle/>
-                <Value>{value}</Value>
-                {[
-                    {value: 0, angle: 0},
-                    {value: 125, angle: 45},
-                    {value: 250, angle: 90},
-                    {value: 375, angle: 135},
-                    // {value: 500, angle: 180},
-                    {value: 625, angle: 225},
-                    {value: 750, angle: 270},
-                    {value: 875, angle: 315}
-                ].map(({value, angle}) => (
-                    <React.Fragment key={value}>
-                        <Marker angle={angle}>
-                            <MarkerValue>{value}</MarkerValue>
-                        </Marker>
-                    </React.Fragment>
-                ))}
+                {isEditing ? (
+                    <Input
+                        type="number"
+                        value={value}
+                        onChange={(e) => handleValueChange(Number(e.target.value))}
+                        onBlur={() => setIsEditing(false)}
+                        autoFocus
+                    />
+                ) : (
+                    <Value onClick={() => setIsEditing(true)}>
+                        {value}
+                    </Value>
+                )} {[
+                {value: 0, angle: 0},
+                {value: 125, angle: 45},
+                {value: 250, angle: 90},
+                {value: 375, angle: 135},
+                // {value: 500, angle: 180},
+                {value: 625, angle: 225},
+                {value: 750, angle: 270},
+                {value: 875, angle: 315}
+            ].map(({value, angle}) => (
+                <React.Fragment key={value}>
+                    <Marker angle={angle}>
+                        <MarkerValue>{value}</MarkerValue>
+                    </Marker>
+                </React.Fragment>
+            ))}
             </SliderContainer>
         </ComponentWrapper>
     );

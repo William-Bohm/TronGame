@@ -186,8 +186,8 @@ export const PlayerScoreComponents: React.FC<FuturisticButtonProps> = ({
                         isSelected={true}
                         color={player.color}
                     />
-                    <div style={{paddingLeft: 6}}>{player.name}
-                    </div>
+                    <PlayerNameContainer style={{paddingLeft: 6}}>{player.name}
+                    </PlayerNameContainer>
                 </div>
                 <div>{player.score}</div>
             </TextContainer>
@@ -233,6 +233,13 @@ export const PlayerScoreComponents: React.FC<FuturisticButtonProps> = ({
     );
 };
 
+const PlayerNameContainer = styled.div`
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
 export const LeftPlayerScoreComponent: React.FC<FuturisticButtonProps> = ({
                                                                    player
                                                                }) => {
@@ -272,8 +279,8 @@ export const LeftPlayerScoreComponent: React.FC<FuturisticButtonProps> = ({
                         isSelected={true}
                         color={player.color}
                     />
-                    <div style={{paddingLeft: 6}}>{player.name}
-                    </div>
+                    <PlayerNameContainer style={{paddingLeft: 6}}>{player.name}
+                    </PlayerNameContainer>
                 </div>
                 <div>{player.score}</div>
             </LeftTextContainer>

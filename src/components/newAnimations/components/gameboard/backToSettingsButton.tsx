@@ -49,7 +49,9 @@ interface SciFiButtonProps {
 
 export const SciFiButton: React.FC<SciFiButtonProps> = ({ onClick }) => {
   return (
-    <ButtonContainer onClick={onClick}>
+    <ButtonContainer
+        onClick={onClick}
+    >
       <ArrowIcon
         src="/sci_fi_arrows/tripple_sci_fi_arrow.svg"
         alt="Settings Arrow"

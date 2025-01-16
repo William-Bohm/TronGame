@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import {useTronContext} from "../../../context/GameContext";
 import styled, {css, ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "../../../theme";
-import {AnimatedLine, LineSegment} from "./newLines";
 
 
 const AppContainer = styled.div`
@@ -179,7 +178,7 @@ const RightColumn = styled.div`
 `;
 
 import {keyframes} from 'styled-components';
-import {cssFormatColors} from "../../../threeJSMeterials";
+import {cssFormatColors, toRGBA} from "../../../threeJSMeterials";
 import GameBoardSelector from "../components/SciFiComponents/GameBoardSelector";
 import {CircleSlider} from "../components/SciFiComponents/CircleSelector";
 import FuturisticButton from "../components/SciFiComponents/SciFiButton1";
@@ -187,6 +186,9 @@ import FuturisticButton2 from "../components/SciFiComponents/SciFitButton2";
 import PlayerSelector from "../components/SciFiComponents/PlayerSelector";
 import AnimatedRings from "../components/SciFiComponents/AnimatedRings";
 import {useNavigate} from "react-router-dom";
+import {withSound} from "../../../TronGame2";
+import {TypeWriterText} from "../components/SciFiComponents/TypeWriterText";
+import {SciFiModal} from "../components/SciFiComponents/SciFiModal";
 
 // Create the glitch animation
 const glitchAnimation = keyframes`
@@ -264,6 +266,7 @@ const CenteredText = styled.div<{ skipIntro: boolean }>`
     }
 `;
 
+
 type LineConfig = {
     start: { xPercent: number; yPercent: number };
     end: { xPercent: number; yPercent: number };
@@ -301,6 +304,8 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
     const isMobile = useIsMobile();
     const [lowerButtonsVisible, setLowerButtonsVisible] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(false);
+    const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     const {
         setIntroComplete,
@@ -336,6 +341,13 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
         };
     }, []);
 
+    const instructions = [
+        "Leave trails of light as you move - crash into any line or wall and you're out!",
+        "Choose your controls or activate Bot mode in the Player Selector.",
+        "Speed: 1 = Fastest, 999 = Slowest.",
+        "Last survivor wins. Good luck!"
+    ].filter(Boolean);
+
 
     const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -349,7 +361,7 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
 
                     <div style={{height: 160}}></div>
 
-                    {(controlsVisible || directToMenu || skipIntro) && (
+                    {(controlsVisible || directToMenu || skipIntro) && (!isHowToPlayOpen) && (
                         <UIColumnsWrapper>
                             <PlayerSelector
                                 text={""}
@@ -368,18 +380,46 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
                             <StartButtonsRelativeWrapper>
                                 <FuturisticButton2
                                     text="How to Play"
-                                    onClick={() => console.log('Button clicked!')}
+                                    onClick={() => withSound(() => setIsHowToPlayOpen(true))()}
                                 />
                                 <FuturisticButton
-                                    text="Start Game"
-                                    onClick={() => setShowGameGrid(true)}
+                                    text="Play Game"
+                                    onClick={() => withSound(() => setShowGameGrid(true))()}
                                 />
                             </StartButtonsRelativeWrapper>
                         </StartButtonsAbsoluteWrapper>
                     )}
-
-
                 </UIOverlay>
+                <SciFiModal
+                    isOpen={isHowToPlayOpen}
+                    onClose={() => setIsHowToPlayOpen(false)}
+                >
+                    <div style={{fontSize: 30, textAlign: 'center'}}>
+                        <TypeWriterText
+                            text="How to play"
+                            delay={0}
+                            speed={10}
+                        />
+                    </div>
+
+                    {instructions.map((instruction, index) => {
+                        const delay = index === 0 ? 0 :
+                            instructions
+                                .slice(0, index)
+                                .reduce((total, text) => total + text.length, 0) * 5;
+
+                        return (
+                            <div key={index} style={{color: '#fff'}}>
+                                <TypeWriterText
+                                    text={instruction}
+                                    delay={delay}
+                                    speed={5}
+                                />
+                            </div>
+                        );
+                    })}
+                </SciFiModal>
+
             </AppContainer>
         </ThemeProvider>
     );

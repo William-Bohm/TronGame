@@ -144,6 +144,13 @@ const CircleMarker = styled.circle`
     stroke-width: 2;
 `;
 
+const PlayerNameContainer = styled.div`
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
 
 export const BottomLeftPlayerScoreComponent: React.FC<FuturisticButtonProps> = ({
                                                                    player
@@ -186,8 +193,8 @@ export const BottomLeftPlayerScoreComponent: React.FC<FuturisticButtonProps> = (
                         isSelected={true}
                         color={player.color}
                     />
-                    <div style={{paddingLeft: 6}}>{player.name}
-                    </div>
+                    <PlayerNameContainer style={{paddingLeft: 6}}>{player.name}
+                    </PlayerNameContainer>
                 </div>
                 <div>{player.score}</div>
             </TextContainer>
@@ -272,8 +279,8 @@ export const BottomRightPlayerScoreComponent: React.FC<FuturisticButtonProps> = 
                         isSelected={true}
                         color={player.color}
                     />
-                    <div style={{paddingLeft: 6}}>{player.name}
-                    </div>
+                    <PlayerNameContainer style={{paddingLeft: 6}}>{player.name}
+                    </PlayerNameContainer>
                 </div>
                 <div>{player.score}</div>
             </LeftTextContainer>

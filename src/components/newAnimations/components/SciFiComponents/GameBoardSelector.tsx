@@ -5,6 +5,7 @@ import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
 import AnimatedRings from "./AnimatedRings";
 import {useTronContext} from "../../../../context/GameContext";
+import {withSound} from "../../../../TronGame2";
 
 interface FuturisticButtonProps {
     text: string;
@@ -27,13 +28,13 @@ const ButtonContainer = styled.div`
     animation: ${slideDown} 1s ease-out forwards;
     //height: 350px;
     //width: 300px;
-        height: 100%;
+    height: 100%;
     width: 100%;
     min-width: 300px;
     max-width: 400px;
     max-height: 500px;
     aspect-ratio: 4 / 5;
-    // border: 2px solid ${cssFormatColors.neonBlue};
+        // border: 2px solid ${cssFormatColors.neonBlue};
 `;
 const SVGContainer = styled.svg`
     position: absolute;
@@ -92,11 +93,11 @@ const TextElement = styled.div`
     @media (max-width: 375px) {
         font-size: 1.5rem;
         left: 36%;
-    } 
-        -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;  
+    }
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none;
 `;
 
 const HeaderContainer = styled.div<TextContainerProps>`
@@ -149,7 +150,7 @@ const TextContainer = styled.div<TextContainerProps>`
     transition: all 0.3s ease;
     //height: 350px;
     //width: 300px;
-        height: 100%;
+    height: 100%;
     width: 100%;
     overflow: hidden;
 
@@ -215,10 +216,10 @@ const SelectorButton = styled.button<{ isSelected: boolean }>`
 
 const ButtonText = styled.span`
     font-size: 16px;
-        -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+/Edge */
-  user-select: none;  
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none;
 `;
 
 interface GridOption {
@@ -282,7 +283,9 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
                             <SelectorButton
                                 key={`${option.width}x${option.height}`}
                                 isSelected={isSelected(option)}
-                                onClick={() => handleSelect(option)}
+                                // onClick={() => handleSelect(option)}
+                                onClick={() => withSound(() => handleSelect(option))()}
+
                             >
                                 <AnimatedRings
                                     size={40}

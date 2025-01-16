@@ -163,20 +163,20 @@ const FuturisticButton: React.FC<FuturisticButtonProps> = ({
                             d={`
             M 3 65
             L 10 65
-            L 15 100
+            L 15.5 100
             L 40 100
           `}
                         />
                         <BorderPath
                             d={`
-            M 11 55
-            L 15 10
+            M 10.5 55
+            L 14.5 10
           `}
                         />
                         <BorderPath
                             d={`
-            M 8 55
-            L 12 10
+            M 7.5 55
+            L 11.5 10
           `}
                         />
                         {/*    right*/}
@@ -185,19 +185,19 @@ const FuturisticButton: React.FC<FuturisticButtonProps> = ({
                             d={`
             M 97 35
             L 90 35
-            L 85 0
+            L 84 0
             L 60 0
           `}
                         />
                         <BorderPath
                             d={`
-            M 89 45
-            L 85 90
+            M 89.5 45
+            L 85.5 90
           `}/>
                         <BorderPath
                             d={`
-            M 92 45
-            L 88 90
+            M 92.5 45
+            L 88.5 90
           `}/>
 
 

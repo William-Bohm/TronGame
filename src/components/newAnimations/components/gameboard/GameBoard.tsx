@@ -1,7 +1,7 @@
-import React, {useRef, useEffect, useState} from 'react';
-import styled from 'styled-components';
+import React, {useRef, useEffect, useState, useCallback} from 'react';
+import styled, {keyframes} from 'styled-components';
 import {useNavigate} from "react-router-dom";
-import {useTronContext} from "../../../../context/GameContext";
+import {Player, PlayerMove, useTronContext} from "../../../../context/GameContext";
 import {rgba} from "polished";
 import {SciFiButton} from "./backToSettingsButton";
 import {LeftPlayerScoreComponent, PlayerScoreComponents} from "../SciFiComponents/PlayerScoreComponents";
@@ -9,10 +9,52 @@ import {
     BottomLeftPlayerScoreComponent,
     BottomRightPlayerScoreComponent
 } from "../SciFiComponents/BottomPlayerScoreComponents";
+import {cssFormatColors} from "../../../../threeJSMeterials";
+import {withSound} from "../../../../TronGame2";
 
 interface GameBoardContainerProps {
     playerCount: number;
 }
+
+const typeAnimation = keyframes`
+    from {
+        width: 0
+    }
+    to {
+        width: 100%
+    }
+`;
+
+
+interface TypedTitleProps {
+    fontSize: 'small' | 'big';
+    color?: string;  // Optional color prop
+}
+
+const TypedTitle = styled.h2<TypedTitleProps>`
+    font-family: 'Orbitron', sans-serif;
+    color: ${props => props.color || cssFormatColors.neonBlue};
+    text-align: center;
+    margin: 0;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 10px;
+    animation: ${typeAnimation} 1s steps(40, end);
+    animation-delay: 1s;
+    width: 0;
+    animation-fill-mode: forwards;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-size: ${props => props.fontSize === 'small' ? '20px' : '32px'};
+
+    @media screen and (max-width: 768px) {
+        font-size: ${props => props.fontSize === 'small' ? '16px' : '24px'};
+    }
+`;
+
 
 const GameBoardContainer = styled.div<GameBoardContainerProps>`
     display: flex;
@@ -38,7 +80,7 @@ const PlayersContainer = styled.div<GameBoardContainerProps>`
     width: 320px;
     align-items: center; // Add this to center children horizontally
     //border: 2px solid red;
-    
+
     @media screen and (min-width: 1400px) {
         ${props => props.playerCount <= 4 && `
             flex-direction: row;
@@ -83,8 +125,6 @@ const SettingsButtonContainer = styled.div`
 
 const CanvasContainer = styled.div`
     position: relative;
-    //width: 100%;
-    //height: calc(100% - 70px); // Subtract space for button and padding
     display: flex;
     justify-content: center;
     align-items: center;
@@ -94,10 +134,31 @@ const StyledCanvas = styled.canvas`
     max-width: 100%;
     max-height: 100%;
     border: 2px solid ${({theme}) => theme.colors.primary};
-    // box-shadow: 
-        //   0 0 5px ${({theme}) => theme.colors.primary},
-        //   0 0 10px ${({theme}) => theme.colors.primary},
-        //   0 0 20px ${({theme}) => theme.colors.primary};
+`;
+const fadeIn = keyframes`
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+`;
+
+const Overlay = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    font-size: 24px;
+    z-index: 1;
+    animation: ${fadeIn} 1s ease-in forwards;
 `;
 
 const MAX_GRID_LINES = 20;
@@ -112,7 +173,13 @@ const GameBoard2: React.FC = () => {
         modelInitialized,
         gameSpeed,
         playerPositions,
-        setShowGameGrid
+        setShowGameGrid,
+        setGameStatus,
+        setPlayerPositions,
+        winner,
+        desiredDirections,
+        controlSchemeMappings,
+
     } = useTronContext();
     const navigate = useNavigate();
 
@@ -174,7 +241,6 @@ const GameBoard2: React.FC = () => {
         };
     }, [players]);
 
-
     // For screens <805px or >1400px
     const topPlayers = players.slice(0, midpoint);
     const bottomPlayers = players.slice(midpoint);
@@ -230,7 +296,7 @@ const GameBoard2: React.FC = () => {
         const ySpacing = Math.max(1, Math.floor(gridSize.height / MAX_GRID_LINES));
 
         // Draw the grid with subtle neon lines
-        ctx.strokeStyle = rgba(192, 192, 192, 0.3);
+        ctx.strokeStyle = rgba(192, 192, 192, 0.2);
         ctx.lineWidth = 0.5;
         for (let y = 0; y < gridSize.height; y += ySpacing) {
             for (let x = 0; x < gridSize.width; x += xSpacing) {
@@ -238,7 +304,6 @@ const GameBoard2: React.FC = () => {
             }
         }
     }, [players, gridSize, cellSize, boardWidth]);
-
 
     const drawnPositionsRef = useRef(new Set<string>());
 
@@ -362,7 +427,6 @@ const GameBoard2: React.FC = () => {
                             );
                             break;
                     }
-
                     requestAnimationFrame(drawFrame);
                 };
                 requestAnimationFrame(drawFrame);
@@ -373,31 +437,78 @@ const GameBoard2: React.FC = () => {
 
     useEffect(() => {
         let isMounted = true;
+        drawnPositionsRef.current = new Set();
+        setPlayerPositions([]);
 
         if (isMounted) {
             setShowGameGrid(true);
             navigate('/game');
         }
-
+        setGameStatus('waiting');
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [])
 
-// Reset drawn positions when game resets
+    // Reset drawn positions when game resets
     useEffect(() => {
         drawnPositionsRef.current = new Set();
     }, [gameStatus]);
 
+    // handle key press's
+    const handleKeyPress = useCallback((event: KeyboardEvent) => {
+        // if space bar then start
+        if (gameStatus !== 'playing') {
+            if (event.key === ' ') {
+                drawnPositionsRef.current = new Set();
+                let resetPlayers = startGame();
+                initializePlayerSquares(resetPlayers);
+            }
+            return;
+        }
+        players.forEach((player: Player) => {
+            if (player.type === 'human') {
+                // Use optional chaining to safely access nested properties
+                const direction = controlSchemeMappings[player.controlScheme!]?.[event.key];
+                if (direction) {
+                    desiredDirections.current[player.id] = direction;
+                }
+            }
+        });
+    }, [gameStatus, players]);
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyPress);
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [handleKeyPress]);
+
+    const initializePlayerSquares = (resetPlayers: Player[]) => {
+        // console.log('resetPlayers', resetPlayers);
+        const initialMoves: PlayerMove[] = resetPlayers.map(player => ({
+            x: player.position[0],
+            y: player.position[1],
+            player_id: player.id,
+            direction: player.direction
+        }));
+        setPlayerPositions(initialMoves);
+    };
+
     return (
         <GameBoardContainer playerCount={players.length}>
             <SettingsButtonContainer>
-                <SciFiButton onClick={() => navigate('/menu')}/>
+                <SciFiButton
+                    // onClick={() => navigate('/menu')}
+                    onClick={() => withSound(() => navigate('/menu'))()}
+
+                />
             </SettingsButtonContainer>
+
 
             {/* Top players */}
             <PlayersContainer playerCount={players.length}>
-                {(windowWidth >= 805 && windowWidth < 1400)  || (windowWidth >= 1400 && players.length <= 4) ? (
+                {(windowWidth >= 805 && windowWidth < 1400) || (windowWidth >= 1400 && players.length <= 4) ? (
                     <>
                         <PlayerSection>
                             {topLeftPlayers.map(player => (
@@ -421,6 +532,32 @@ const GameBoard2: React.FC = () => {
 
             <CanvasContainer>
                 <StyledCanvas ref={canvasRef}/>
+                {gameStatus === 'waiting' && (
+                    <Overlay>
+                        <TypedTitle fontSize={'small'}>
+                            Press space to start...
+                        </TypedTitle>
+                    </Overlay>
+                )}
+                {gameStatus === 'gameOver' && (
+                    <Overlay>
+                        <TypedTitle
+                            fontSize={"big"}
+                            color={winner !== null ? players.find(player => player.id === winner)?.color : undefined}
+                        >
+                            {winner === null
+                                ? "Draw!"
+                                : `${players.find(player => player.id === winner)?.name} wins!`
+                            }
+                        </TypedTitle>
+                        <TypedTitle
+                            fontSize={'small'}
+                            color={winner !== null ? players.find(player => player.id === winner)?.color : undefined}
+                        >
+                            Press space to play again...
+                        </TypedTitle>
+                    </Overlay>
+                )}
             </CanvasContainer>
 
             {/* Bottom players */}

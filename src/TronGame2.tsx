@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import PlayerManager from './components/PlayerManager';
 import {Player, useTronContext} from "./context/GameContext";
 import {keyframes, ThemeProvider} from "styled-components";
@@ -17,6 +17,8 @@ import GlowingDots from "./components/newAnimations/components/BackgroundGlowing
 import {useNavigate} from "react-router-dom";
 import GameBoard from "./components/newAnimations/components/gameboard/GameBoard";
 import GameBoard2 from "./components/newAnimations/components/gameboard/GameBoard";
+import {cssFormatColors} from "./threeJSMeterials";
+import {Volume2, VolumeX} from "react-feather";
 
 const AppContainer = styled.div`
     display: flex;
@@ -66,10 +68,40 @@ export const AnimatedBackground = styled.div`
     background-attachment: fixed;
 `;
 
+const IconWrapper = styled.button`
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1000; // Add this to ensure it's above other elements
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+
+    &:focus {
+        outline: none; // Add this to ensure it's removed in all browsers
+    }
+`;
+
 interface TronGame2Props {
     directToMenu?: boolean;
     directToGame?: boolean;
 }
+
+export const withSound = (onClick: () => void) => () => {
+    const audio = new Audio('/sound/button_sound_effect.mp3');
+    audio.play().catch(err => console.log('Audio play failed:', err));
+    onClick();
+};
+
 
 const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame = false}) => {
     const navigate = useNavigate();
@@ -104,45 +136,6 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
             mounted = false;
         };
     }, []);
-
-    // handle key press's
-    const handleKeyPress = useCallback((event: KeyboardEvent) => {
-        // if space bar then start
-        if (gameStatus !== 'playing') {
-            if (event.key === ' ') {
-                startGame();
-            }
-            return;
-        }
-        players.forEach((player: Player) => {
-            if (player.type === 'human') {
-                // Use optional chaining to safely access nested properties
-                const direction = controlSchemeMappings[player.controlScheme!]?.[event.key];
-                if (direction) {
-                    desiredDirections.current[player.id] = direction;
-                }
-            }
-        });
-    }, [gameStatus, players]);
-
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyPress);
-        return () => {
-            window.removeEventListener('keydown', handleKeyPress);
-        };
-    }, [handleKeyPress]);
-
-    // useEffect(() => {
-    //     if (directToGame) {
-    //         navigate('/game', {replace: true});
-    //     }
-    //     else if (introComplete) {
-    //         setTimeout(() => {
-    //             navigate('/menu', {replace: true});
-    //         }, 4000);
-    //     }
-    // }, [introComplete]);
-
 
     const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -179,8 +172,62 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
         }
     }, [directToMenu, navigate, isMounted]);
 
+    // music
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const togglePlay = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+                // setIsPlaying(false);
+            } else {
+                audioRef.current.play();
+                // setIsPlaying(true);
+            }
+            audioRef.current.volume = 0.1;
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    const [hasInteracted, setHasInteracted] = useState(false);
+
+    useEffect(() => {
+        const handleFirstInteraction = () => {
+            if (audioRef.current && !hasInteracted) {
+                togglePlay();
+                setHasInteracted(true);
+                // Remove listeners after first interaction
+                document.removeEventListener('click', handleFirstInteraction);
+                document.removeEventListener('keydown', handleFirstInteraction);
+            }
+        };
+
+        document.addEventListener('click', handleFirstInteraction);
+        document.addEventListener('keydown', handleFirstInteraction);
+
+        return () => {
+            document.removeEventListener('click', handleFirstInteraction);
+            document.removeEventListener('keydown', handleFirstInteraction);
+        };
+    }, [hasInteracted]);
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        // Prevent space from triggering the button
+        if (e.code === 'Space') {
+            e.preventDefault();
+        }
+    };
+
+
     return (
         <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+            <audio
+                ref={audioRef}
+                src="/sound/gradient-148888.mp3"
+                loop
+                preload="auto"
+            />
             <AppContainer>
                 <GlobalStyles/>
                 {(!introComplete && !directToMenu && !directToGame) ? (
@@ -191,6 +238,16 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
                 ) : (
                     // main menu
                     <div>
+                        <IconWrapper
+                            onClick={togglePlay}
+                            onKeyDown={handleKeyDown}
+                        >
+                            {isPlaying ? (
+                                <Volume2 size={24} color={cssFormatColors.neonBlue}/>
+                            ) : (
+                                <VolumeX size={24} color={cssFormatColors.neonBlue}/>
+                            )}
+                        </IconWrapper>
                         <AnimatedBackground/>
                         {!showGameGrid ? (
                             <div>
