@@ -24,7 +24,6 @@ const AppContainer = styled.div`
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    overflow: hidden;
 `;
 
 const fadeIn = keyframes`

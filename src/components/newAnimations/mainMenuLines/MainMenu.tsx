@@ -4,11 +4,11 @@ import styled, {css, ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "../../../theme";
 
 
-const AppContainer = styled.div`
+const MainMenuContainer = styled.div`
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    overflow: hidden;
+    z-index: 1001;
 `;
 
 const SceneContainer = styled.div`
@@ -62,17 +62,13 @@ const ToggleLinesButton = styled.button`
 `;
 
 const UIOverlay = styled.div`
-    //position: absolute;
-    //top: 0;
-    //left: 0;
     width: 100%;
     height: 100%;
-    //pointer-events: none; // This allows clicks to pass through to the scene
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    z-index: 1;
+    z-index: 1002;
 `;
 
 const StartButtonsAbsoluteWrapper = styled.div`
@@ -108,8 +104,7 @@ const GameSpeedWrapper = styled.div`
 
 const UIColumnsWrapper = styled.div`
     width: 84%;
-    z-index: 10000;
-        // border: 2px solid ${({theme}) => theme.colors.primary};
+    z-index: 1003;
     @media (max-width: 1400px) {
         left: 5%;
         width: 90%;
@@ -131,14 +126,12 @@ const UIColumnsWrapper = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    pointer-events: none;
-
+    border: 1px solid red;
+    //pointer-events: none;
 
     //scrollable
     overflow-y: auto;
     overflow-x: hidden;
-
-    // Re-enable pointer events for direct children
 
     > * {
         pointer-events: auto;
@@ -353,76 +346,73 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
     const [isDarkMode, setIsDarkMode] = useState(true);
 
     return (
-        <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-            <AppContainer>
-                {/* UI Overlay */}
-                <UIOverlay>
+        <MainMenuContainer>
+            {/* UI Overlay */}
+            <UIOverlay>
 
-                    <CenteredText skipIntro={directToMenu || skipIntro}>Tronvolution</CenteredText>
+                <CenteredText skipIntro={directToMenu || skipIntro}>Tronvolution</CenteredText>
 
-                    <div style={{height: 160}}></div>
+                <div style={{height: 160}}></div>
 
-                    {(controlsVisible || directToMenu || skipIntro) && (!isHowToPlayOpen) && (
-                        <UIColumnsWrapper>
-                            <PlayerSelector
-                                text={""}
-                                onClick={() => console.log('Button clicked!')}
-                            />
-                            <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
-                            <GameBoardSelector
-                                text=""
-                                onClick={() => console.log('Button clicked!')}
-                            />
-                        </UIColumnsWrapper>
-                    )}
-
-                    {(lowerButtonsVisible || directToMenu || skipIntro) && (
-                        <StartButtonsAbsoluteWrapper>
-                            <StartButtonsRelativeWrapper>
-                                <FuturisticButton2
-                                    text="How to Play"
-                                    onClick={() => withSound(() => setIsHowToPlayOpen(true), '/sound/shimmer_synth.mp3')()}
-                                />
-                                <FuturisticButton
-                                    text="Play Game"
-                                    onClick={() => withSound(() => setShowGameGrid(true))()}
-                                />
-                            </StartButtonsRelativeWrapper>
-                        </StartButtonsAbsoluteWrapper>
-                    )}
-                </UIOverlay>
-                <SciFiModal
-                    isOpen={isHowToPlayOpen}
-                    onClose={() => setIsHowToPlayOpen(false)}
-                >
-                    <div style={{fontSize: 30, textAlign: 'center'}}>
-                        <TypeWriterText
-                            text="How to play"
-                            delay={0}
-                            speed={10}
+                {(controlsVisible || directToMenu || skipIntro) && (!isHowToPlayOpen) && (
+                    <UIColumnsWrapper>
+                        <PlayerSelector
+                            text={""}
+                            onClick={() => console.log('Button clicked!')}
                         />
-                    </div>
+                        <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
+                        <GameBoardSelector
+                            text=""
+                            onClick={() => console.log('Button clicked!')}
+                        />
+                    </UIColumnsWrapper>
+                )}
 
-                    {instructions.map((instruction, index) => {
-                        const delay = index === 0 ? 0 :
-                            instructions
-                                .slice(0, index)
-                                .reduce((total, text) => total + text.length, 0) * 5;
+                {(lowerButtonsVisible || directToMenu || skipIntro) && (
+                    <StartButtonsAbsoluteWrapper>
+                        <StartButtonsRelativeWrapper>
+                            <FuturisticButton2
+                                text="How to Play"
+                                onClick={() => withSound(() => setIsHowToPlayOpen(true), '/sound/shimmer_synth.mp3')()}
+                            />
+                            <FuturisticButton
+                                text="Play Game"
+                                onClick={() => withSound(() => setShowGameGrid(true))()}
+                            />
+                        </StartButtonsRelativeWrapper>
+                    </StartButtonsAbsoluteWrapper>
+                )}
+            </UIOverlay>
+            <SciFiModal
+                isOpen={isHowToPlayOpen}
+                onClose={() => setIsHowToPlayOpen(false)}
+            >
+                <div style={{fontSize: 30, textAlign: 'center'}}>
+                    <TypeWriterText
+                        text="How to play"
+                        delay={0}
+                        speed={10}
+                    />
+                </div>
 
-                        return (
-                            <div key={index} style={{color: '#fff'}}>
-                                <TypeWriterText
-                                    text={instruction}
-                                    delay={delay}
-                                    speed={5}
-                                />
-                            </div>
-                        );
-                    })}
-                </SciFiModal>
+                {instructions.map((instruction, index) => {
+                    const delay = index === 0 ? 0 :
+                        instructions
+                            .slice(0, index)
+                            .reduce((total, text) => total + text.length, 0) * 5;
 
-            </AppContainer>
-        </ThemeProvider>
+                    return (
+                        <div key={index} style={{color: '#fff'}}>
+                            <TypeWriterText
+                                text={instruction}
+                                delay={delay}
+                                speed={5}
+                            />
+                        </div>
+                    );
+                })}
+            </SciFiModal>
+        </MainMenuContainer>
     );
 };
 
