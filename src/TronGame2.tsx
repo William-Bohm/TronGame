@@ -127,12 +127,20 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
         controlSchemeMappings
     } = useTronContext();
 
-    //   init game board
     useEffect(() => {
         let mounted = true;
 
-        if (!modelInitialized && mounted) {
-            initBoard();
+        // Check if on mobile using window.innerWidth
+        const isMobile = window.innerWidth <= 768; // You can adjust this breakpoint
+
+        if (mounted) {
+            if (isMobile) {
+                setIntroComplete(true);
+            }
+
+            if (!modelInitialized) {
+                initBoard();
+            }
         }
 
         return () => {
