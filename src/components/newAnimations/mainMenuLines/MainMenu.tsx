@@ -108,6 +108,7 @@ const GameSpeedWrapper = styled.div`
 
 const UIColumnsWrapper = styled.div`
     width: 84%;
+    z-index: 10000;
         // border: 2px solid ${({theme}) => theme.colors.primary};
     @media (max-width: 1400px) {
         left: 5%;
