@@ -96,8 +96,11 @@ interface TronGame2Props {
     directToGame?: boolean;
 }
 
-export const withSound = (onClick: () => void) => () => {
-    const audio = new Audio('/sound/button_sound_effect.mp3');
+export const withSound = (
+    onClick: () => void,
+    soundPath: string = '/sound/button_sound_effect.mp3'
+) => () => {
+    const audio = new Audio(soundPath);
     audio.play().catch(err => console.log('Audio play failed:', err));
     onClick();
 };
@@ -185,7 +188,7 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
                 audioRef.current.play();
                 // setIsPlaying(true);
             }
-            audioRef.current.volume = 0.1;
+            audioRef.current.volume = 0.3;
             setIsPlaying(!isPlaying);
         }
     };

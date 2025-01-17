@@ -380,7 +380,7 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
                             <StartButtonsRelativeWrapper>
                                 <FuturisticButton2
                                     text="How to Play"
-                                    onClick={() => withSound(() => setIsHowToPlayOpen(true))()}
+                                    onClick={() => withSound(() => setIsHowToPlayOpen(true), '/sound/shimmer_synth.mp3')()}
                                 />
                                 <FuturisticButton
                                     text="Play Game"

@@ -259,7 +259,7 @@ const GameBoard2: React.FC = () => {
         const availableWidth = window.innerWidth * (8 / 10) - spaceTakenUpByPlayerScoresHorizontal;
         const availableHeight = window.innerHeight * (8 / 10) - spaceTakenUpByPlayerScoresVertical;
         const maxWidth = Math.min(availableWidth, availableHeight);
-        const cellSize = Math.floor(maxWidth / gridSize.width);
+        const cellSize = Math.floor((maxWidth / gridSize.width) + 0.5);
         const actualWidth = cellSize * gridSize.width;
         return {boardWidth: actualWidth, cellSize};
     };
