@@ -24,6 +24,12 @@ services:
       - "traefik.http.routers.tronvolutionwebsite.tls=true"
       - "traefik.http.routers.tronvolutionwebsite.tls.certresolver=letsencrypt"
       - "traefik.http.services.tronvolutionwebsite.loadbalancer.server.port=80"
+      # http -> https rerouting
+      - "traefik.http.routers.tronvolutionwebsite-http.rule=Host(`tronvolution.com`) || Host(`www.tronvolution.com`)"
+      - "traefik.http.routers.tronvolutionwebsite-http.entrypoints=http"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.tronvolutionwebsite-http.middlewares=https-redirect"
       # Add middleware for SPA
       - "traefik.http.middlewares.spa-middleware.replacepathregex.regex=^(/[^\\.]*)$$"
       - "traefik.http.middlewares.spa-middleware.replacepathregex.replacement=/index.html"
