@@ -31,13 +31,6 @@ const GlobalStyles = createGlobalStyle`
         color: ${({theme}) => theme.colors.primary};
         text-decoration: none;
     }
-
-    //@font-face {
-    //    font-family: 'Orbitron';
-    //    src: url('/font/Orbitron/Orbitron-VariableFont_wght.ttf') format('truetype');
-    //    font-weight: 100 900;
-    //    font-style: normal;
-    //}
 `;
 
 export default GlobalStyles;
