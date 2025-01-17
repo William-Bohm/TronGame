@@ -126,7 +126,7 @@ const UIColumnsWrapper = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid red;
+    //border: 1px solid red;
     //pointer-events: none;
 
     //scrollable

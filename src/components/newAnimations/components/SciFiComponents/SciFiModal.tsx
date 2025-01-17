@@ -74,7 +74,7 @@ export const ModalOverlay = styled.div<{ isClosing: boolean }>`
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1010;
     animation: ${props => props.isClosing
             ? css`${fadeIn} 0.3s ease-out reverse`
             : css`${fadeIn} 0.3s ease-out`};
