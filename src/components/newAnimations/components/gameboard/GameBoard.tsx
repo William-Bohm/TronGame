@@ -450,6 +450,12 @@ const GameBoard2: React.FC = () => {
         };
     }, [])
 
+    const handleGameStart = () => {
+        drawnPositionsRef.current = new Set();
+        let resetPlayers = startGame();
+        initializePlayerSquares(resetPlayers);
+    }
+
     // Reset drawn positions when game resets
     useEffect(() => {
         drawnPositionsRef.current = new Set();
@@ -460,9 +466,7 @@ const GameBoard2: React.FC = () => {
         // if space bar then start
         if (gameStatus !== 'playing') {
             if (event.key === ' ') {
-                drawnPositionsRef.current = new Set();
-                let resetPlayers = startGame();
-                initializePlayerSquares(resetPlayers);
+                handleGameStart();
             }
             return;
         }
@@ -533,14 +537,16 @@ const GameBoard2: React.FC = () => {
             <CanvasContainer>
                 <StyledCanvas ref={canvasRef}/>
                 {gameStatus === 'waiting' && (
-                    <Overlay>
+                    <Overlay onClick={handleGameStart}
+                             onTouchStart={handleGameStart}>
                         <TypedTitle fontSize={'small'}>
                             Press space to start...
                         </TypedTitle>
                     </Overlay>
                 )}
                 {gameStatus === 'gameOver' && (
-                    <Overlay>
+                    <Overlay onClick={handleGameStart}
+                             onTouchStart={handleGameStart}>
                         <TypedTitle
                             fontSize={"big"}
                             color={winner !== null ? players.find(player => player.id === winner)?.color : undefined}
