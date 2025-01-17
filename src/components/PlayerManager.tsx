@@ -210,7 +210,6 @@ const PlayerManager: React.FC = () => {
       }
   };
 
-
     const removePlayer = (id: number) => {
       try{
         if (gameStatus !== 'playing') {
@@ -229,7 +228,6 @@ const PlayerManager: React.FC = () => {
         console.log(e)
       }
   };
-
 
   function getUserControlScheme(): ControlScheme {
     const usedSchemes = players.map(player => player.controlScheme);

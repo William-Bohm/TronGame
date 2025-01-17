@@ -1,9 +1,10 @@
 ../notes
 notes/*
-
 node_modules
 package-lock.json
 .idea
 .env
 *.env
 .DS_Store
+dist/
+build

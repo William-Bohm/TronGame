@@ -2,14 +2,15 @@
 import * as THREE from 'three';
 import { FontLoader, Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import {Material} from "three";
 
 interface LetterOptions {
   letter: string;
   startPosition: THREE.Vector3;
   endPosition: THREE.Vector3;
-  startTime: number;         // When the animation starts
-  initialDuration: number;   // Duration of Phase 1
-  duration: number;          // Duration of Phase 2
+  startTime: number;
+  initialDuration: number;
+  duration: number;
 }
 
 class Letter3D {
@@ -73,7 +74,7 @@ class Letter3D {
     const material = new THREE.MeshPhongMaterial({
       color: 0x7dfdfe,
       emissive: 0x7dfdfe,
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 0.7,
       shininess: 100,
     });
 
@@ -134,6 +135,44 @@ update(deltaTime: number, elapsedTime: number): boolean {
     this.mesh.quaternion.copy(this.finalRotation);
     return false;
   }
+}
+public cleanup(): void {
+    if (this.mesh) {
+        // Dispose of geometry
+        if (this.mesh.geometry) {
+            this.mesh.geometry.dispose();
+        }
+
+        // Dispose of material
+        if (this.mesh.material) {
+            // Check if material is an array
+            if (Array.isArray(this.mesh.material)) {
+                this.mesh.material.forEach(material => material.dispose());
+            } else {
+                if (this.mesh.material instanceof Material) {
+                    this.mesh.material.dispose();
+                }
+            }
+        }
+
+        // Remove from parent
+        if (this.mesh.parent) {
+            this.mesh.parent.remove(this.mesh);
+        }
+
+        // Clear reference
+        this.mesh = null;
+    }
+
+    // Clear references
+    this.initialRotation.set(0, 0, 0, 1);
+    this.finalRotation.set(0, 0, 0, 1);
+}
+
+// You might also want to add a static cleanup method to handle the font
+public static cleanupFont(): void {
+    Letter3D.font = null;
+    Letter3D.fontLoading = null;
 }
 }
 
