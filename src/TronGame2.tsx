@@ -23,7 +23,7 @@ import {Volume2, VolumeX} from "react-feather";
 const AppContainer = styled.div`
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 `;
 
@@ -266,7 +266,7 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                height: '100vh'
+                                height: '100dvh'
                             }}>
                                 <GameBoard2/>
 
