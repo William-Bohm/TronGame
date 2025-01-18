@@ -18,7 +18,7 @@ export abstract class AnimationManager {
         this.scene = scene;
     }
 
-    abstract update(deltaTime: number, cameraSpeed?: number): boolean;
+    abstract update(deltaTime: number, cameraSpeed?: number): boolean | void;
     abstract cleanup(): void;
 }
 

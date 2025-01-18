@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback, useRef} from 'react';
+import React, {useEffect, useState, useCallback, useRef, Suspense, lazy} from 'react';
 import PlayerManager from './components/PlayerManager';
 import {Player, useTronContext} from "./context/GameContext";
 import {keyframes, ThemeProvider} from "styled-components";
@@ -12,13 +12,16 @@ import Controls from "./components/Controls";
 import './TronGame.css';
 import CubeRain from "./components/animations/fallingCubes";
 import MainMenu from "./components/newAnimations/mainMenuLines/MainMenu";
-import ThreeScene3 from "./components/newAnimations/ThreeScene3";
+// import ThreeScene3 from "./components/newAnimations/ThreeScene3";
 import GlowingDots from "./components/newAnimations/components/BackgroundGlowingDots";
 import {useNavigate} from "react-router-dom";
 import GameBoard from "./components/newAnimations/components/gameboard/GameBoard";
 import GameBoard2 from "./components/newAnimations/components/gameboard/GameBoard";
 import {cssFormatColors} from "./threeJSMeterials";
 import {Volume2, VolumeX} from "react-feather";
+
+const ThreeScene3 = lazy(() => import("./components/newAnimations/ThreeScene3"));
+
 
 const AppContainer = styled.div`
     display: flex;
@@ -71,7 +74,7 @@ const IconWrapper = styled.button`
     position: absolute;
     top: 0;
     right: 0;
-    z-index: 1000; // Add this to ensure it's above other elements
+    z-index: 1050; // Add this to ensure it's above other elements
     background: none;
     border: none;
     cursor: pointer;
@@ -97,9 +100,11 @@ interface TronGame2Props {
 
 export const withSound = (
     onClick: () => void,
-    soundPath: string = '/sound/button_sound_effect.mp3'
+    soundPath: string = '/sound/button_sound_effect.mp3',
+    volume: number = 1.0  // Default volume is 1.0 (max)
 ) => () => {
     const audio = new Audio(soundPath);
+    audio.volume = Math.min(1.0, Math.max(0, volume)); // Clamp volume between 0 and 1
     audio.play().catch(err => console.log('Audio play failed:', err));
     onClick();
 };
@@ -242,9 +247,9 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
                 <GlobalStyles/>
                 {(!introComplete && !directToMenu && !directToGame) ? (
                     // intro
-                    <div>
+                    <Suspense fallback={<div></div>}>
                         <ThreeScene3/>
-                    </div>
+                    </Suspense>
                 ) : (
                     // main menu
                     <div>

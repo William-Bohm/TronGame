@@ -10,6 +10,8 @@ export class Line3D {
     private static readonly LINE_WIDTH = 0.1;
     private static readonly LINE_HEIGHT = 0.2;
     private static readonly LINE_DEPTH = 0.2;
+    private isComplete: boolean = false;
+
 
     private scene: THREE.Scene | THREE.Group;
     private waypoints: Waypoint[];
@@ -92,36 +94,35 @@ export class Line3D {
 
         this.progress += currentWaypoint.speed * deltaTime;
 
-    if (this.progress >= 1) {
-        // Finish current segment
-        this.updateSegmentScale(this.currentSegment, 1);
+        if (this.progress >= 1) {
+            // Finish current segment
+            this.updateSegmentScale(this.currentSegment, 1);
 
-        // Add current segment to completed segments
-        if (this.currentSegment) {
-            this.completedSegments.push(this.currentSegment);
-        }
+            // Add current segment to completed segments
+            if (this.currentSegment) {
+                this.completedSegments.push(this.currentSegment);
+            }
 
-        // Update last position to current waypoint's position
-        this.lastPosition?.copy(currentWaypoint.position);
+            // Update last position to current waypoint's position
+            this.lastPosition?.copy(currentWaypoint.position);
 
-        this.currentWaypointIndex++;
-        this.progress = 0;
+            this.currentWaypointIndex++;
+            this.progress = 0;
 
-        // Check if we've reached the end of the waypoints
-        if (this.currentWaypointIndex >= this.waypoints.length - 1) {
-            this.currentSegment = null; // Clear the current segment
-            return false; // We're done with all waypoints
-        }
+            // Check if we've reached the end of the waypoints
+            if (this.currentWaypointIndex >= this.waypoints.length - 1) {
+                this.currentSegment = null; // Clear the current segment
+                this.isComplete = true;
+                return true;
+            }
 
-        // Only create next segment if we haven't reached the end
-        this.createNextSegment();
-    } else if (this.currentSegment) {
+            // Only create next segment if we haven't reached the end
+            this.createNextSegment();
+        } else if (this.currentSegment) {
             // Grow the current segment
             this.updateSegmentScale(this.currentSegment, this.progress);
         }
-
-
-        return true;
+        return !this.isComplete;
     }
 
     private updateSegmentScale(segment: THREE.Mesh, progress: number) {
@@ -129,6 +130,10 @@ export class Line3D {
         const remainingScale = 1 - initialScale;
         const newScale = initialScale + remainingScale * progress;
         segment.scale.setX(newScale);
+    }
+
+    isAnimationComplete(): boolean {
+        return this.isComplete;
     }
 
     public cleanup(): void {

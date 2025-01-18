@@ -116,6 +116,8 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         }
     };
 
+    const animationSpeed = 10;
+
     if (!isOpen) return null;
 
     return (
@@ -133,7 +135,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 0 0
         L 50 0  
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={0.5}
                     />
                     <BorderPath
@@ -141,7 +143,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 0 0
         L 5 0  
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={5}
                     />
 
@@ -151,7 +153,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 100 0
         L 50 0  
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={0.5}
                     />
                     <BorderPath
@@ -159,7 +161,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 100 0
         L 95 0  
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={5}
                     />
 
@@ -169,7 +171,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 0 100
         L 50 100  
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={0.5}
                     />
                     <BorderPath
@@ -177,7 +179,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 0 100
         L 5 100 
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={5}
                     />
                     {/*    right bottom*/}
@@ -186,7 +188,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 100 100
         L 50 100  
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={0.5}
                     />
                     <BorderPath
@@ -194,7 +196,7 @@ export const SciFiModal: React.FC<ModalProps> = ({isOpen, onClose, children}) =>
         M 100 100
         L 95 100 
     `}
-                        animationSpeed={10} // 12 is good
+                        animationSpeed={animationSpeed} // 12 is good
                         strokeWidth={5}
                     />
 

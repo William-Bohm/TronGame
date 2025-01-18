@@ -32,18 +32,16 @@ export class LogoManager extends AnimationManager {
     private startTime: number;
     private lettersInitialized: boolean = false;
     public currentPosition: LogoPosition = LogoPosition.CENTER;
-    private underlines: UnderlineMesh[] = [];
-    private underlineSidelines: UnderlineMesh[] = [];
-    public isUnderlineVisible: boolean = false;
-    public isUnderlineSidelinesVisible: boolean = false;
+    private onComplete?: () => void;
 
-    constructor(scene: THREE.Scene, letterOptions: LetterOptions[], startTime: number) {
+    constructor(scene: THREE.Scene, letterOptions: LetterOptions[], startTime: number, onComplete?: () => void) {
         super(scene);
         this.lettersGroup = new THREE.Group();
         this.lettersGroup.position.x = 0;
         this.scene.add(this.lettersGroup);
         this.letterOptions = letterOptions;
         this.startTime = startTime;
+        this.onComplete = onComplete;
     }
 
     private getScreenCoordinates(position: LogoPosition): { x: number, y: number, z: number } {
@@ -97,31 +95,6 @@ export class LogoManager extends AnimationManager {
         this.moveToPosition(worldPos, speed);
     }
 
-    // Your existing helper methods
-    public moveToTopMiddle(camera: THREE.PerspectiveCamera, speed: number = 2): void {
-        this.currentPosition = LogoPosition.TOP_MIDDLE;
-        const coords = this.getScreenCoordinates(LogoPosition.TOP_MIDDLE);
-        const worldPos = screenToWorld(
-            camera,
-            coords.x,
-            coords.y,
-            coords.z
-        );
-        this.moveToPosition(worldPos, speed);
-    }
-
-    public moveToCenter(camera: THREE.PerspectiveCamera, speed: number = 2): void {
-        const coords = this.getScreenCoordinates(LogoPosition.CENTER);
-        const worldPos = screenToWorld(
-            camera,
-            coords.x,
-            coords.y,
-            coords.z
-        );
-        this.moveToPosition(worldPos, speed);
-        this.currentPosition = LogoPosition.CENTER;
-    }
-
     private easeInOutCubic(t: number): number {
         return t < 0.5
             ? 4 * t * t * t
@@ -149,24 +122,6 @@ export class LogoManager extends AnimationManager {
         animate(this.elapsedTime);
     }
 
-    public skipIntroAnimation(camera: THREE.PerspectiveCamera): void {
-        // create letters if don't exist yet
-        if (this.currentAnimation === 'unInitialized') {
-            this.initializeLetters(camera);
-            this.currentAnimation = 'intro';
-        }
-
-        for (let i = this.letters.length - 1; i >= 0; i--) {
-            this.letters[i].skipToEnd();
-            this.currentPosition = LogoPosition.TOP_MIDDLE;
-        }
-
-        this.lettersGroup.position.x = camera.position.x;
-
-
-        this.resizeLogo(camera, 0.0001);
-    }
-
     public initializeLetters(camera: THREE.PerspectiveCamera): void {
         console.log('Initializing letters');
         this.resizeLogo(camera);
@@ -180,22 +135,20 @@ export class LogoManager extends AnimationManager {
     public updateLettersIntro(deltaTime: number, cameraSpeed: number, camera: THREE.PerspectiveCamera): void {
         this.elapsedTime += deltaTime;
         if (this.elapsedTime < 4) {
+            let allComplete = true;
             for (let i = this.letters.length - 1; i >= 0; i--) {
-                this.letters[i].update(deltaTime, this.elapsedTime - this.startTime)
+                const isActive = this.letters[i].update(deltaTime, this.elapsedTime - this.startTime);
+                if (isActive) {
+                    allComplete = false;
+                }
+            }
+
+            if (allComplete && this.onComplete) {
+                this.onComplete();
+                this.onComplete = undefined; // Prevent multiple calls
             }
         }
-
-
         this.lettersGroup.position.x += deltaTime * cameraSpeed;
-    }
-
-    public updateLogoUnderline(deltaTime: number, cameraSpeed: number): void {
-        this.underlines.forEach(underline => {
-            underline.animate(deltaTime, this.isUnderlineVisible);
-        });
-        this.underlineSidelines.forEach(underline => {
-            underline.animate(deltaTime, this.isUnderlineSidelinesVisible);
-        });
     }
 
     update(deltaTime: number, cameraSpeed: number): boolean {
@@ -211,43 +164,4 @@ export class LogoManager extends AnimationManager {
         this.letters = [];
         console.log('LetterAnimationManager cleanup complete');
     }
-
-
-//     underline
-    public toggleUnderline(): void {
-        this.isUnderlineVisible = !this.isUnderlineVisible;
-
-        if (this.isUnderlineVisible && this.underlines.length === 0) {
-            this.createUnderline();
-        }
-    }
-
-    public toggleUnderlineSidelines(): void {
-        console.log('toggling underline sidelines');
-        this.isUnderlineSidelinesVisible = !this.isUnderlineSidelinesVisible;
-        //
-        // if (this.isUnderlineSidelinesVisible && this.underlineSidelines.length === 0) {
-        //     this.createUnderline();
-        // }
-    }
-
-
-    private createUnderline(): void {
-        // Calculate total width of letters
-        const bbox = new THREE.Box3().setFromObject(this.lettersGroup);
-        const width = bbox.max.x - bbox.min.x;
-
-        // Create underline
-        const underlineVector = new THREE.Vector3(2, -2, -20);
-        const leftLineVector = new THREE.Vector3(-width * 2 / 3 - 4.5, 2, -20);
-        const rightLineVector = new THREE.Vector3(width * 2 / 3 + 8.5, 2, -20);
-        const underline = new UnderlineMesh(this.lettersGroup, width * 2, underlineVector, 100, materials.neonBlue);
-        const leftLine = new UnderlineMesh(this.lettersGroup, width * 2 / 5, leftLineVector, 20, materials.neonOrange);
-        const rightLine = new UnderlineMesh(this.lettersGroup, width * 2 / 5, rightLineVector, 20, materials.neonOrange);
-        this.underlines.push(underline);
-        this.underlineSidelines.push(leftLine);
-        this.underlineSidelines.push(rightLine);
-        console.log('Underline created');
-    }
-
 }
