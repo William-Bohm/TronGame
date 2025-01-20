@@ -5,11 +5,13 @@ import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
 import AnimatedRings from "./AnimatedRings";
 import {useTronContext} from "../../../../context/GameContext";
-import {withSound} from "../../../../TronGame2";
+import {useSound} from "../../../../context/AudioContext";
+import {div} from "shader-composer/fun";
 
 interface FuturisticButtonProps {
     text: string;
     onClick: () => void;
+    directToMenu: boolean;
 }
 
 
@@ -238,6 +240,7 @@ const gridOptions: GridOption[] = [
 const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
                                                                 text,
                                                                 onClick,
+                                                                directToMenu
                                                             }) => {
     const isMobile = useIsMobile();
     const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -245,7 +248,9 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
     const [showDiagnolArrayLines, setShowDiagnolArrayLines] = useState<boolean>(false);
     const [showThickLines, setShowThickLines] = useState<boolean>(false);
     const {updateGridSize, gridSize} = useTronContext();
-
+    const {
+        withSound,
+    } = useSound();
     const isSelected = (option: GridOption) =>
         gridSize.width === option.width && gridSize.height === option.height;
 
@@ -255,6 +260,18 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
 
     // timer for lines
     useEffect(() => {
+        if (directToMenu) {
+            setShowLines(true);
+            setTimeout(() => {
+                setShowThickLines(true);
+            }, 200);
+
+            setTimeout(() => {
+                setShowDiagnolArrayLines(true);
+            }, 1000);
+        }
+
+
         const timer = setTimeout(() => {
             setShowLines(true);
         }, 300);
@@ -270,6 +287,8 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
         // Cleanup function
         return () => clearTimeout(timer);
     }, []);
+
+    const thinLineSpeed = directToMenu ? 0.001 : 10;
 
     return (
         <ButtonContainer>
@@ -323,7 +342,7 @@ const GameBoardSelector: React.FC<FuturisticButtonProps> = ({
         L 7.7 35
         L 3 30
     `}
-                            animationSpeed={10} // 12 is good
+                            animationSpeed={thinLineSpeed} // 12 is good
                             strokeWidth={0.5}
                         />
 

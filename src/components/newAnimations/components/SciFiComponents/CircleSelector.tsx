@@ -10,6 +10,7 @@ interface CircleSliderProps {
     max?: number;
     value: number;
     onChange: (value: number) => void;
+    directToMenu: boolean;
 }
 
 const typeAnimation = keyframes`
@@ -42,7 +43,7 @@ const ComponentWrapper = styled.div`
 
 `;
 
-const TypedTitle = styled.h2`
+const TypedTitle = styled.h2<{ directToMenu?: boolean }>`
     font-family: 'Orbitron', sans-serif;
     color: ${cssFormatColors.neonBlue};
     text-align: center;
@@ -52,8 +53,24 @@ const TypedTitle = styled.h2`
     white-space: nowrap;
     margin-bottom: 10px;
     animation: ${typeAnimation} 1s steps(40, end);
-    animation-delay: 1s; /* Adds a 1-second delay before the animation starts */
-    width: 0; /* Important: ensures the text starts hidden */
+    animation-delay: ${props => props.directToMenu ? '0s' : '1s'};
+    width: 0;
+    animation-fill-mode: forwards;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+`;
+
+const NonTypedTitle = styled.h2`
+    font-family: 'Orbitron', sans-serif;
+    color: ${cssFormatColors.neonBlue};
+    text-align: center;
+    margin: 0;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 10px;
     animation-fill-mode: forwards; /* Keeps the final state after animation ends */
     -webkit-user-select: none; /* Safari */
     -moz-user-select: none; /* Firefox */
@@ -210,7 +227,8 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
                                                               min = 1,
                                                               max = 1000,
                                                               value,
-                                                              onChange
+                                                              onChange,
+    directToMenu
                                                           }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -231,7 +249,13 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
 
     useEffect(() => {
         let startTime: number;
-        const duration = 2000; // 2 seconds in milliseconds
+        let duration: number;
+        if (directToMenu) {
+            duration = 1500;
+        } else {
+            duration = 2000;
+        }
+         // 2 seconds in milliseconds
         const startValue = 0;
         const targetValue = value;
 
@@ -305,7 +329,7 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
 
     return (
         <ComponentWrapper>
-            <TypedTitle>Game Speed</TypedTitle>
+            <TypedTitle directToMenu={directToMenu}>Game Speed</TypedTitle>
             <SliderContainer ref={containerRef}>
                 <CircleTrack/>
                 <CircleProgress progress={progress}/>

@@ -172,17 +172,18 @@ const RightColumn = styled.div`
 `;
 
 import {keyframes} from 'styled-components';
-import {cssFormatColors, toRGBA} from "../../../threeJSMeterials";
+import {cssFormatColors} from "../../../threeJSMeterials";
 import GameBoardSelector from "../components/SciFiComponents/GameBoardSelector";
 import {CircleSlider} from "../components/SciFiComponents/CircleSelector";
 import FuturisticButton from "../components/SciFiComponents/SciFiButton1";
 import FuturisticButton2 from "../components/SciFiComponents/SciFitButton2";
 import PlayerSelector from "../components/SciFiComponents/PlayerSelector";
-import AnimatedRings from "../components/SciFiComponents/AnimatedRings";
 import {useNavigate} from "react-router-dom";
-import {withSound} from "../../../TronGame2";
 import {TypeWriterText} from "../components/SciFiComponents/TypeWriterText";
 import {SciFiModal} from "../components/SciFiComponents/SciFiModal";
+import {Volume2, VolumeX} from "react-feather";
+import {useSound} from "../../../context/AudioContext";
+import {AudioControllerContent} from "../components/SciFiComponents/AudioControllerModal";
 
 // Create the glitch animation
 const glitchAnimation = keyframes`
@@ -260,6 +261,29 @@ const CenteredText = styled.div<{ skipIntro: boolean }>`
     }
 `;
 
+const AudioButtonWrapper = styled.button`
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1050;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+
+    &:focus {
+        outline: none; // Add this to ensure it's removed in all browsers
+    }
+`;
+
 
 type LineConfig = {
     start: { xPercent: number; yPercent: number };
@@ -299,7 +323,18 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
     const [lowerButtonsVisible, setLowerButtonsVisible] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(false);
     const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+    const [isAudioControlsOpen, setIsAudioControlsOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const {
+        withSound,
+        toggleMusic,
+        setMusicVolume,
+        setSoundEffectsVolume,
+        isMusicEnabled,
+        toggleMusicEnabled,
+        isSoundEffectsEnabled,
+        toggleSoundEffects
+    } = useSound();
 
     const {
         setIntroComplete,
@@ -327,7 +362,7 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
                 setShowGameGrid(false);
                 navigate('/menu');
             }
-        }, 4000);
+        }, 7000);
 
         // Cleanup function
         return () => {
@@ -349,21 +384,22 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
         <MainMenuContainer>
             {/* UI Overlay */}
             <UIOverlay>
-
                 <CenteredText skipIntro={directToMenu || skipIntro}>Tronvolution</CenteredText>
 
                 <div style={{height: 160}}></div>
 
-                {(controlsVisible || directToMenu || skipIntro) && (!isHowToPlayOpen) && (
+                {(controlsVisible || directToMenu || skipIntro) && (!isHowToPlayOpen && !isAudioControlsOpen) && (
                     <UIColumnsWrapper>
                         <PlayerSelector
                             text={""}
                             onClick={() => console.log('Button clicked!')}
+                            directToMenu={directToMenu}
                         />
-                        <CircleSlider value={gameSpeed} onChange={setGameSpeed}/>
+                        <CircleSlider value={gameSpeed} onChange={setGameSpeed} directToMenu={directToMenu}/>
                         <GameBoardSelector
                             text=""
                             onClick={() => console.log('Button clicked!')}
+                            directToMenu={directToMenu}
                         />
                     </UIColumnsWrapper>
                 )}
@@ -373,7 +409,10 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
                         <StartButtonsRelativeWrapper>
                             <FuturisticButton2
                                 text="How to Play"
-                                onClick={() => withSound(() => setIsHowToPlayOpen(true), '/sound/shimmer_synth.mp3', 0.5)()}
+                                onClick={() => withSound(() => {
+                                    setIsHowToPlayOpen(true);
+                                    setIsAudioControlsOpen(false);
+                                }, '/sound/shimmer_synth.mp3', 0.5)()}
                             />
                             <FuturisticButton
                                 text="Play Game"
@@ -411,6 +450,23 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
                         </div>
                     );
                 })}
+            </SciFiModal>
+
+            {!isAudioControlsOpen && (
+                <AudioButtonWrapper
+                    onClick={() => withSound(() => {
+                        setIsAudioControlsOpen(true);
+                        setIsHowToPlayOpen(false);
+                    }, '/sound/shimmer_synth.mp3', 0.5)()}>
+                    <Volume2 size={24} color={cssFormatColors.neonBlue}/>
+                </AudioButtonWrapper>
+            )}
+
+            <SciFiModal
+                isOpen={isAudioControlsOpen}
+                onClose={() => setIsAudioControlsOpen(false)}
+            >
+                <AudioControllerContent/>
             </SciFiModal>
         </MainMenuContainer>
     );

@@ -10,7 +10,7 @@ import {
     BottomRightPlayerScoreComponent
 } from "../SciFiComponents/BottomPlayerScoreComponents";
 import {cssFormatColors} from "../../../../threeJSMeterials";
-import {withSound} from "../../../../TronGame2";
+import {useSound} from "../../../../context/AudioContext";
 
 interface GameBoardContainerProps {
     playerCount: number;
@@ -181,6 +181,9 @@ const GameBoard2: React.FC = () => {
         controlSchemeMappings,
 
     } = useTronContext();
+    const {
+        withSound,
+    } = useSound();
     const navigate = useNavigate();
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);

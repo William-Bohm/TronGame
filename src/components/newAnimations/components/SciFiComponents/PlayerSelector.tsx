@@ -8,11 +8,12 @@ import {darken, lighten} from "polished";
 import {ControlScheme, Player, Position, useTronContext} from "../../../../context/GameContext";
 import {FaTrashAlt} from "react-icons/fa";
 import AnimatedRings from "./AnimatedRings";
-import {withSound} from "../../../../TronGame2";
+import {useSound} from "../../../../context/AudioContext";
 
 interface FuturisticButtonProps {
     text: string;
     onClick: () => void;
+    directToMenu: boolean;
 }
 
 
@@ -433,7 +434,10 @@ export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({player, upd
     );
 };
 
-const EditablePlayerName = ({ player, updatePlayer }: { player: Player, updatePlayer: (id: number, field: keyof Player, value: any) => void }) => {
+const EditablePlayerName = ({player, updatePlayer}: {
+    player: Player,
+    updatePlayer: (id: number, field: keyof Player, value: any) => void
+}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(player.name);
     const MAX_LENGTH = 20;
@@ -477,7 +481,21 @@ const EditablePlayerName = ({ player, updatePlayer }: { player: Player, updatePl
 const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                                                              text,
                                                              onClick,
+                                                             directToMenu
+
                                                          }) => {
+    const {
+        players,
+        setPlayers,
+        gridSize,
+        gameStatus,
+        availableControlSchemes,
+        setAvailableControlSchemes,
+        allControlSchemes,
+        calculatePlayerStartPositions,
+        setGameGrid,
+        resetGame,
+    } = useTronContext();
     //
     //
     // animation variables
@@ -497,74 +515,105 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
     const [topThickSeven, setTopThickSeven] = useState<boolean>(false);
     const [topThickEight, setTopThickEight] = useState<boolean>(false);
     const [randomThickBottomBar, setRandomThickBottomBar] = useState<boolean>(false);
-    const topThickStartTime = 1000;
+    // const topThickStartTime = 1000;
+    // const thickBarSpeed = 10;
+    // const repeatBarSpeed = 10;
     const thickBarSpeed = 10;
+    const thinBarSpeed = directToMenu ? 0.001 : 10;
+    const repeatBarSpeed = 100;
 
     // repeated bars vars
     const [topRepeatedBars, setTopRepeatedBars] = useState<boolean>(false);
     const [bottomRepeatedBars, setBottomRepeatedBars] = useState<boolean>(false);
-    const repeatedBarsStartTimie = 2700;
+    const {
+        withSound,
+    } = useSound();
 
     // timer for lines
     useEffect(() => {
-        const timer = setTimeout(() => {
+        let topThickStartTime = 1000;
+        let repeatedBarsStartTimie = 2700;
+
+        if (directToMenu) {
+            topThickStartTime = 0;
+            repeatedBarsStartTimie = 1700;
+            // If intro is complete, set all states immediately
+            setShowLines(true);
+            // setTopThickTwo(true);
+            // setTopThickOne(true);
+            // setTopThickThree(true);
+            // setTopThickFour(true);
+            // setTopThickFive(true);
+            // setTopThickSix(true);
+            // setTopThickSeven(true);
+            // setTopRepeatedBars(true);
+            // setBottomRepeatedBars(true);
+            // setRandomThickBottomBar(true);
+        }
+
+        // If intro is not complete, use timeouts
+        const timers: NodeJS.Timeout[] = [];
+
+        const timer1 = setTimeout(() => {
             setShowLines(true);
         }, 300);
+        timers.push(timer1);
 
         // thick bars
-        setTimeout(() => {
+        const timer2 = setTimeout(() => {
             setTopThickTwo(true);
-        }, topThickStartTime + 0);
-        setTimeout(() => {
+        }, topThickStartTime);
+        timers.push(timer2);
+
+        const timer3 = setTimeout(() => {
             setTopThickOne(true);
         }, topThickStartTime + 50);
-        setTimeout(() => {
+        timers.push(timer3);
+
+        const timer4 = setTimeout(() => {
             setTopThickThree(true);
         }, topThickStartTime + 500);
-        setTimeout(() => {
+        timers.push(timer4);
+
+        const timer5 = setTimeout(() => {
             setTopThickFour(true);
         }, topThickStartTime + 550);
-        setTimeout(() => {
+        timers.push(timer5);
+
+        const timer6 = setTimeout(() => {
             setTopThickFive(true);
         }, topThickStartTime + 925);
-        setTimeout(() => {
+        timers.push(timer6);
+
+        const timer7 = setTimeout(() => {
             setTopThickSix(true);
         }, topThickStartTime + 1075);
-        setTimeout(() => {
+        timers.push(timer7);
+
+        const timer8 = setTimeout(() => {
             setTopThickSeven(true);
         }, topThickStartTime + 1750);
-
+        timers.push(timer8);
 
         // repeated bars
-        setTimeout(() => {
+        const timer9 = setTimeout(() => {
             setTopRepeatedBars(true);
             setBottomRepeatedBars(true);
             setRandomThickBottomBar(true);
         }, repeatedBarsStartTimie);
+        timers.push(timer9);
 
-
-        // Cleanup function
-        return () => clearTimeout(timer);
-    }, []);
-
+        // Cleanup function to clear all timeouts
+        return () => {
+            timers.forEach(timer => clearTimeout(timer));
+        };
+    }, [directToMenu]); // Add directToMenu to dependency array
     //
     //
     // player manager logic
     //
     //
 
-    const {
-        players,
-        setPlayers,
-        gridSize,
-        gameStatus,
-        availableControlSchemes,
-        setAvailableControlSchemes,
-        allControlSchemes,
-        calculatePlayerStartPositions,
-        setGameGrid,
-        resetGame,
-    } = useTronContext();
     const [newPlayer, setNewPlayer] = useState<Partial<Player>>({});
 
     const addPlayer = () => {
@@ -799,7 +848,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         L 5.5 35.5
         L 0.5 30.5
     `}
-                            animationSpeed={10} // 12 is good
+                            animationSpeed={thinBarSpeed} // 12 is good
                             strokeWidth={0.5}
                         />
 
@@ -880,13 +929,11 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
             M ${88 - (index * 3)} 94.5
             L ${91 - (index * 3)} 91.5
         `}
-                                        animationSpeed={100}
+                                        animationSpeed={repeatBarSpeed}
                                         strokeWidth={1.5}
                                     />
                                 ))}</>
                         )}
-                        {/*             bottom           repeats*/}
-
 
                         {/*             top           repeats*/}
                         {topRepeatedBars && (
@@ -898,7 +945,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
             M ${89 - (index * 3)} 13
             L ${91 - (index * 3)} 15
         `}
-                                        animationSpeed={100}
+                                        animationSpeed={repeatBarSpeed}
                                         strokeWidth={1.5}
                                         color={toRGBA(cssFormatColors.darkGrey, 1)}
                                     />
@@ -923,8 +970,6 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                     </SVGContainer>
                 </div>
             )}
-
-
         </ButtonContainer>
     );
 };

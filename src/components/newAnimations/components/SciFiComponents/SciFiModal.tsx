@@ -59,9 +59,15 @@ export const CloseButton = styled.button`
     right: 10px;
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 28px;
     cursor: pointer;
     color: ${cssFormatColors.neonBlue};
+    transition: font-size 0.2s ease;
+
+    &:hover {
+        font-size: 32px;
+        text-shadow: 0 0 10px ${cssFormatColors.neonBlue};
+    }
 `;
 
 export const ModalOverlay = styled.div<{ isClosing: boolean }>`

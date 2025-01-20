@@ -4,7 +4,6 @@ import {cssFormatColors, toRGBA, toHSLA} from "../../../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
 import {Player} from "../../../../context/GameContext";
-import {CustomColorPicker} from "./PlayerSelector";
 import AnimatedRings from "./AnimatedRings";
 
 interface FuturisticButtonProps {

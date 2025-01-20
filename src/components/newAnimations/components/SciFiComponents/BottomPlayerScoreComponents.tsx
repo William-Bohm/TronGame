@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import styled, {keyframes} from 'styled-components';
 import {cssFormatColors, toRGBA, toHSLA} from "../../../../threeJSMeterials";
-import {slideDown} from "./SciFiSlideDownAnimation";
+import {slideDown, slideUp} from "./SciFiSlideDownAnimation";
 import {useIsMobile} from "../../ThreeScene3";
 import {Player} from "../../../../context/GameContext";
 import {CustomColorPicker} from "./PlayerSelector";
@@ -24,7 +24,7 @@ const ButtonContainer = styled.div`
     justify-content: center;
     padding: 0;
     transition: all 0.3s ease;
-    animation: ${slideDown} 1s ease-out forwards;
+    animation: ${slideUp} 1s ease-out forwards;
     //border: 1px solid greenyellow;
     min-height: 60px;
     height: 60px;
