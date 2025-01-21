@@ -193,7 +193,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
         let resetPlayers = resetGame();
         setGameStatus('playing');
         isGameRunning.current = true;
-        console.log("starting game")
+        // console.log("starting game")
         return resetPlayers;
     };
 

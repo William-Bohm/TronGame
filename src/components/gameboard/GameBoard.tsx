@@ -252,10 +252,10 @@ const GameBoard2: React.FC = () => {
     //
     useEffect(() => {
         if (canvasRef.current) {
-            console.log(canvasRef.current?.width ?? 0);
+            // console.log(canvasRef.current?.width ?? 0);
             setCanvasWidth(canvasRef.current?.width ?? 0);
         }
-        console.log(gameGrid)
+        // console.log(gameGrid)
     }, []);
 
     const calculateBoardSize = () => {

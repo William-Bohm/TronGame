@@ -22,6 +22,7 @@ export interface SoundContextType {
 
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
+const audioCache: { [key: string]: HTMLAudioElement } = {};
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -99,14 +100,38 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({children
         volume: number = 1.0
     ) => () => {
         if (isSoundEffectsEnabled) {
-            const audio = new Audio(soundPath);
+            if (!audioCache[soundPath]) {
+                audioCache[soundPath] = new Audio(soundPath);
+            }
+
+            const audio = audioCache[soundPath];
+
+            // Reset the audio to the start if it's still playing
+            audio.currentTime = 0;
+
             // Combine the individual sound volume with the global sound effects volume
             const finalVolume = Math.min(1.0, Math.max(0, volume * soundEffectsVolume));
             audio.volume = finalVolume;
+
             audio.play().catch(err => console.log('Audio play failed:', err));
         }
         onClick();
     };
+
+    // Preload function
+    const preloadAudio = (paths: string[]) => {
+        paths.forEach(path => {
+            if (!audioCache[path]) {
+                audioCache[path] = new Audio(path);
+            }
+        });
+    };
+
+    useEffect(() => {
+        preloadAudio(['/sound/button_sound_effect.mp3', '/sound/shimmer_synth.mp3']);
+    }, [preloadAudio]);
+
+
 
     const value: SoundContextType = {
         isMusicPlaying,
@@ -129,7 +154,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({children
                 src="/sound/gradient-148888.mp3"
                 loop
                 preload="auto"
-                style={{ display: 'none' }}
+                style={{display: 'none'}}
             />
             {children}
         </SoundContext.Provider>

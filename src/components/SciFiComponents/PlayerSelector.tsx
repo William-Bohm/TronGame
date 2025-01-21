@@ -636,7 +636,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                 setAvailableControlSchemes(availableControlSchemes.filter(scheme => scheme !== controlScheme));
             }
             setNewPlayer({});
-            console.log(players);
+            // console.log(players);
 
         }
     };
@@ -660,7 +660,7 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                     newSchemes = newSchemes.filter(scheme => scheme !== value);
                 }
 
-                console.log('Updated schemes:', newSchemes);
+                // console.log('Updated schemes:', newSchemes);
                 setAvailableControlSchemes(newSchemes);
 
                 // Update player with new control scheme
@@ -682,7 +682,6 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
         }
     };
     const removePlayer = (id: number) => {
-        console.log('remove player')
         try {
             if (gameStatus !== 'playing') {
                 resetGame();
@@ -696,7 +695,6 @@ const PlayerSelector: React.FC<FuturisticButtonProps> = ({
                 }
             }
         } catch (e) {
-            console.log('error baby')
             console.log(e)
         }
     };
