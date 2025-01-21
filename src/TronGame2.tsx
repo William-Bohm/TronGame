@@ -1,27 +1,19 @@
 import React, {useEffect, useState, useCallback, useRef, Suspense, lazy} from 'react';
-import PlayerManager from './components/PlayerManager';
 import {Player, useTronContext} from "./context/GameContext";
 import {keyframes, ThemeProvider} from "styled-components";
 import {darkTheme, lightTheme} from "./theme";
 import GlobalStyles from './GlobalStyles';
-import NeonLogo from "./components/NeonLogo";
-import GameSpeedSlider from "./components/ControllerComponents/GameSpeedSlider";
-import BoardSizeSelector from "./components/ControllerComponents/BoardSizeSelector";
 import styled from 'styled-components';
-import Controls from "./components/Controls";
 import './TronGame.css';
-import CubeRain from "./components/animations/fallingCubes";
-import MainMenu from "./components/newAnimations/mainMenuLines/MainMenu";
+import MainMenu from "./components/mainMenu/MainMenu";
 // import ThreeScene3 from "./components/newAnimations/ThreeScene3";
-import GlowingDots from "./components/newAnimations/components/BackgroundGlowingDots";
+import GlowingDots from "./components/mainMenu/BackgroundGlowingDots";
 import {useNavigate} from "react-router-dom";
-import GameBoard from "./components/newAnimations/components/gameboard/GameBoard";
-import GameBoard2 from "./components/newAnimations/components/gameboard/GameBoard";
-import {cssFormatColors} from "./threeJSMeterials";
-import {Volume2, VolumeX} from "react-feather";
-import {SoundProvider} from "./context/AudioContext";
 
-const ThreeScene3 = lazy(() => import("./components/newAnimations/ThreeScene3"));
+import {SoundProvider} from "./context/AudioContext";
+import GameBoard2 from "./components/gameboard/GameBoard";
+
+const ThreeScene3 = lazy(() => import("./components/intro/ThreeScene3"));
 
 
 const AppContainer = styled.div`
@@ -196,12 +188,6 @@ const TronGame2: React.FC<TronGame2Props> = ({directToMenu = false, directToGame
 
     return (
         <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-            {/*<audio*/}
-            {/*    ref={audioRef}*/}
-            {/*    src="/sound/gradient-148888.mp3"*/}
-            {/*    loop*/}
-            {/*    preload="auto"*/}
-            {/*/>*/}
             <SoundProvider>
                 <AppContainer>
                     <GlobalStyles/>

@@ -1,20 +1,14 @@
-import * as THREE from 'three';
+import {MeshPhongMaterial} from "three";
 
 export const materials = {
-    neonBlue: new THREE.MeshPhongMaterial({
+    neonBlue: new MeshPhongMaterial({
         color: 0x9dfcfc,
         emissive: 0x9dfcfc,
         emissiveIntensity: 0.5,
         shininess: 100,
     }),
-    // neonBlue: new THREE.MeshPhongMaterial({
-    //         color: 0x7dfdfe,
-    //         emissive: 0x7dfdfe,
-    //         emissiveIntensity: 0.5,
-    //         shininess: 100,
-    // }),
 
-    neonOrange: new THREE.MeshPhongMaterial({
+    neonOrange: new MeshPhongMaterial({
         color: 0xff9f05,
         emissive: 0xff9f05,
         emissiveIntensity: 1,

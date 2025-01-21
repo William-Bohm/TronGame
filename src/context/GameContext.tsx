@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useState, ReactNode, useRef, useEffect} from 'react';
-import {initializeModelSession, getModelMoveSuggestion} from "../onnx-handler";
+import {initializeModelSession} from "../onnx-handler";
 import init, {run_engine, Move} from "../wasm/trust.js"
 
 export type Position = [number, number];
@@ -138,13 +138,12 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
     }
 
     const initBoard = async () => {
+        // set default values
+        setDefaultSettings();
         // Initialize WASM
         await init();
         // Initialize onnxruntime-web model
-        // TODO: remove
         await initializeModel();
-        setDefaultSettings();
-        console.log("Board and model initialized.")
     };
     const setDefaultSettings = () => {
         // Create an empty grid
@@ -300,7 +299,6 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
             }
             const initialized = await initializeModelSession();
             setModelInitialized(initialized);
-            console.log('Model initialized:', initialized);
         } catch (error) {
             console.error('Failed to initialize AI model:', error);
             setModelInitialized(false);

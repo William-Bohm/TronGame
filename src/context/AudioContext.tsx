@@ -48,11 +48,18 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({children
     };
 
     const toggleMusicEnabled = () => {
+        console.log('toggleMusicEnabled: ', !isMusicEnabled);
         setIsMusicEnabled(!isMusicEnabled);
         if (audioRef.current) {
-            audioRef.current.volume = !isMusicEnabled ? musicVolume : 0;
+            if (!isMusicEnabled) {
+                audioRef.current.volume = musicVolume;
+                audioRef.current.play();
+            } else {
+                audioRef.current.volume = 0;
+            }
         }
     };
+
 
     const toggleSoundEffects = () => {
         setSoundEffectsEnabled(!isSoundEffectsEnabled);
@@ -82,6 +89,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({children
     useEffect(() => {
         if (audioRef.current && isMusicEnabled) {
             audioRef.current.volume = musicVolume;
+            audioRef.current.play();
         }
     }, [musicVolume, isMusicEnabled]);
 
@@ -116,15 +124,13 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({children
 
     return (
         <SoundContext.Provider value={value}>
-            {isMusicEnabled && (
-                <audio
-                    ref={audioRef}
-                    src="/sound/gradient-148888.mp3"
-                    loop
-                    preload="auto"
-                />
-            )}
-
+            <audio
+                ref={audioRef}
+                src="/sound/gradient-148888.mp3"
+                loop
+                preload="auto"
+                style={{ display: 'none' }}
+            />
             {children}
         </SoundContext.Provider>
     );
