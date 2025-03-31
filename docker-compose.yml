@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     restart: unless-stopped
@@ -45,3 +43,4 @@ networks:
   tronvolution-network:
     driver: bridge
     name: tronvolution-network
+    external: true
