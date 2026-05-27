@@ -232,10 +232,10 @@ interface GridOption {
 }
 
 const gridOptions: GridOption[] = [
-    {width: 10, height: 10, label: '10 x 10'},
-    {width: 50, height: 50, label: '50 x 50'},
-    {width: 100, height: 100, label: '100 x 100'},
-    {width: 200, height: 200, label: '200 x 200'},
+    {width: 3, height: 3, label: '3 x 3'},
+    {width: 4, height: 4, label: '4 x 4'},
+    {width: 5, height: 5, label: '5 x 5'},
+    {width: 6, height: 6, label: '6 x 6'},
 ];
 
 const GameBoardSelector: React.FC<FuturisticButtonProps> = ({

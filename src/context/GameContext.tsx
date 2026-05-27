@@ -96,7 +96,7 @@ interface TronProviderProps {
 export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     const [introComplete, setIntroComplete] = useState(false);
     const [skipIntro, setSkipIntro] = useState(false);
-    const [gridSize, setGridSize] = useState({ width: 10, height: 10 });
+    const [gridSize, setGridSize] = useState({ width: 3, height: 3 });
     const [gameGrid, setGameGrid] = useState<number[][]>(
         Array(gridSize.height).fill(null).map(() =>
             Array(gridSize.width).fill(0)
@@ -127,13 +127,14 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
 
     const updateGridSize = (width: number, height: number) => {
         if (gameStatus === 'playing') return;
-        setGridSize({ width, height });
+        const nextGridSize = { width, height };
+        setGridSize(nextGridSize);
         setGameGrid(
             Array(height).fill(null).map(() =>
                 Array(width).fill(0)
             )
         )
-        let newPlayers = calculatePlayerStartPositions(players, gridSize);
+        let newPlayers = calculatePlayerStartPositions(players, nextGridSize);
         setPlayers(newPlayers);
     }
 
@@ -204,40 +205,33 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
         const { width, height } = gridSize;
         const playerCount = players.length;
 
-        // Calculate the inset amount (20% of the smaller dimension, minimum 1)
-        const inset = Math.max(1, Math.floor(Math.min(width, height) * 0.2));
+        if (playerCount === 0) {
+            return players;
+        }
 
-        // Calculate the playable area
-        const playableWidth = width - 2 * inset;
-        const playableHeight = height - 2 * inset;
+        const perimeterSlots: { position: Position; direction: Direction }[] = [];
 
-        // Calculate the center of the playable area
-        const centerX = (width - 1) / 2;
-        const centerY = (height - 1) / 2;
-
-        // Calculate the radius of the circle on which players will be placed
-        const radius = Math.min(playableWidth, playableHeight) / 2 - 0.5;
+        for (let x = 0; x < width - 1; x++) {
+            perimeterSlots.push({ position: [x, 0], direction: 'right' });
+        }
+        for (let y = 0; y < height - 1; y++) {
+            perimeterSlots.push({ position: [width - 1, y], direction: 'down' });
+        }
+        for (let x = width - 1; x > 0; x--) {
+            perimeterSlots.push({ position: [x, height - 1], direction: 'left' });
+        }
+        for (let y = height - 1; y > 0; y--) {
+            perimeterSlots.push({ position: [0, y], direction: 'up' });
+        }
 
         return players.map((player, index) => {
-            // Calculate the angle for this player
-            const angle = (index / playerCount) * 2 * Math.PI;
-
-            // Calculate the position
-            const x = Math.round(centerX + radius * Math.cos(angle));
-            const y = Math.round(centerY + radius * Math.sin(angle));
-
-            // Determine the direction based on the player's position relative to the center
-            let direction: Player['direction'];
-            if (Math.abs(x - centerX) > Math.abs(y - centerY)) {
-                direction = x > centerX ? 'left' : 'right';
-            } else {
-                direction = y > centerY ? 'up' : 'down';
-            }
+            const slotIndex = Math.floor((index * perimeterSlots.length) / playerCount) % perimeterSlots.length;
+            const slot = perimeterSlots[slotIndex];
 
             return {
                 ...player,
-                position: [x, y] as Position,
-                direction,
+                position: slot.position,
+                direction: slot.direction,
             };
         });
     }
