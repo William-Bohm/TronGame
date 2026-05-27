@@ -1,6 +1,6 @@
-import React, {createContext, useContext, useState, ReactNode, useRef, useEffect} from 'react';
-import {initializeModelSession} from "../onnx-handler";
-import init, {run_engine, Move} from "../wasm/trust.js"
+import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from 'react';
+import { initializeModelSession } from "../onnx-handler";
+import init, { run_engine, Move } from "../wasm/trust.js"
 
 export type Position = [number, number];
 export type PlayerType = 'human' | 'bot';
@@ -93,10 +93,10 @@ interface TronProviderProps {
     children: ReactNode;
 }
 
-export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
+export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     const [introComplete, setIntroComplete] = useState(false);
     const [skipIntro, setSkipIntro] = useState(false);
-    const [gridSize, setGridSize] = useState({width: 10, height: 10});
+    const [gridSize, setGridSize] = useState({ width: 10, height: 10 });
     const [gameGrid, setGameGrid] = useState<number[][]>(
         Array(gridSize.height).fill(null).map(() =>
             Array(gridSize.width).fill(0)
@@ -115,19 +115,19 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
     ]);
     const allControlSchemes = ['wasd', 'yghj', 'arrows', 'ijkl', "pl;'", 'numpad', 'bot'] as const;
     const controlSchemeMappings: ControlSchemesMapping = {
-        wasd: {w: 'up', a: 'left', s: 'down', d: 'right'},
-        arrows: {ArrowUp: 'up', ArrowLeft: 'left', ArrowDown: 'down', ArrowRight: 'right'},
-        ijkl: {i: 'up', j: 'left', k: 'down', l: 'right'},
-        "pl;'": {p: 'up', l: 'left', ';': 'down', "'": 'right'},
-        yghj: {y: 'up', g: 'left', h: 'down', j: 'right'},
-        numpad: {'8': 'up', '4': 'left', '5': 'down', '6': 'right'},
+        wasd: { w: 'up', a: 'left', s: 'down', d: 'right' },
+        arrows: { ArrowUp: 'up', ArrowLeft: 'left', ArrowDown: 'down', ArrowRight: 'right' },
+        ijkl: { i: 'up', j: 'left', k: 'down', l: 'right' },
+        "pl;'": { p: 'up', l: 'left', ';': 'down', "'": 'right' },
+        yghj: { y: 'up', g: 'left', h: 'down', j: 'right' },
+        numpad: { '8': 'up', '4': 'left', '5': 'down', '6': 'right' },
         bot: {} // Empty mapping for bot
     };
     const [playerPositions, setPlayerPositions] = useState<PlayerMove[]>([]);
 
     const updateGridSize = (width: number, height: number) => {
         if (gameStatus === 'playing') return;
-        setGridSize({width, height});
+        setGridSize({ width, height });
         setGameGrid(
             Array(height).fill(null).map(() =>
                 Array(width).fill(0)
@@ -201,7 +201,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
         players: Player[],
         gridSize: { width: number; height: number }
     ): Player[] {
-        const {width, height} = gridSize;
+        const { width, height } = gridSize;
         const playerCount = players.length;
 
         // Calculate the inset amount (20% of the smaller dimension, minimum 1)
@@ -251,7 +251,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
 
         let resetPlayers = calculatePlayerStartPositions(players, gridSize);
         // set all players alive variable to true
-        resetPlayers = resetPlayers.map(player => ({...player, alive: true}));
+        resetPlayers = resetPlayers.map(player => ({ ...player, alive: true }));
         setPlayers(resetPlayers);
         desiredDirections.current = {};
 
@@ -286,7 +286,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
         setPlayers(prevPlayers =>
             prevPlayers.map(player =>
                 player.id === playerId
-                    ? {...player, direction}
+                    ? { ...player, direction }
                     : player
             )
         );
@@ -310,18 +310,18 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
 
         if (alivePlayers.length === 0) {
             // All players died simultaneously
-            return {gameOver: true, winner: null};
+            return { gameOver: true, winner: null };
         } else if (alivePlayers.length === 1) {
             // add a point to the users score
             const winner = players.find(player => player.id === alivePlayers[0].id);
             if (winner) {
                 winner.score += 1;
             }
-            return {gameOver: true, winner: alivePlayers[0].id};
+            return { gameOver: true, winner: alivePlayers[0].id };
         }
 
         // Game continues
-        return {gameOver: false, winner: null};
+        return { gameOver: false, winner: null };
     };
 
     const gameLoop = async () => {
@@ -355,7 +355,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
                 }
                 try {
                     // Only passes the first opponent position for now
-                    const move: Move = run_engine(uint8Array, gameGrid.length, gameGrid[0].length, player.position[1], player.position[0], opponentPositions[0][1], opponentPositions[0][1]);
+                    const move: Move = run_engine(uint8Array, gameGrid.length, gameGrid[0].length, player.position[1], player.position[0], opponentPositions[0][1], opponentPositions[0][0]);
                     // console.log("Move (row, col) offset", move.row_offset, move.col_offset);
 
                     let new_dir: Direction;
@@ -445,7 +445,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
         // check if any players are trying to access the same coodirnates
         const positionMap = new Map<string, number[]>(); // Maps position string to array of player IDs
 
-// Build position map
+        // Build position map
         newPlayers.forEach(player => {
             if (!player.alive) return;
             const posKey = `${player.position[0]},${player.position[1]}`;
@@ -457,7 +457,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
             }
         });
 
-// Check for collisions
+        // Check for collisions
         positionMap.forEach((playerIds, position) => {
             if (playerIds.length > 1) {
                 // If multiple players are in the same position, mark them all as not alive
@@ -484,7 +484,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({children}) => {
 
 
         // Check game over condition after all players have moved
-        const {gameOver, winner} = isGameOver(newPlayers);
+        const { gameOver, winner } = isGameOver(newPlayers);
         if (gameOver) {
             isGameRunning.current = false;
             console.log(gameOver, winner);
