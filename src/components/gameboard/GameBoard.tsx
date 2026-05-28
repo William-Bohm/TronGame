@@ -1,7 +1,14 @@
 import React, {useRef, useEffect, useState, useCallback} from 'react';
 import styled, {keyframes} from 'styled-components';
 import {useNavigate} from "react-router-dom";
-import {getGameTickDelay, isStepThroughSpeed, Player, PlayerMove, useTronContext} from "../../context/GameContext";
+import {
+    Direction,
+    getGameTickDelay,
+    isStepThroughSpeed,
+    Player,
+    PlayerMove,
+    useTronContext
+} from "../../context/GameContext";
 import {rgba} from "polished";
 import {SciFiButton} from "./backToSettingsButton";
 import {LeftPlayerScoreComponent, PlayerScoreComponents} from "../SciFiComponents/PlayerScoreComponents";
@@ -163,6 +170,137 @@ const Overlay = styled.div`
 
 const MAX_GRID_LINES = 20;
 
+const withAlpha = (color: string, alpha: number) => {
+    try {
+        return rgba(color, alpha);
+    } catch {
+        return color;
+    }
+};
+
+const createDirectionalGradient = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    direction: Direction,
+    color: string
+) => {
+    const gradient = direction === 'left' || direction === 'right'
+        ? ctx.createLinearGradient(x, y, x + size, y)
+        : ctx.createLinearGradient(x, y, x, y + size);
+
+    const brightStop = direction === 'left' || direction === 'up' ? 0.12 : 0.88;
+    gradient.addColorStop(0, withAlpha(color, 0.2));
+    gradient.addColorStop(Math.max(0, brightStop - 0.12), withAlpha(color, 0.55));
+    gradient.addColorStop(brightStop, withAlpha(color, 0.95));
+    gradient.addColorStop(Math.min(1, brightStop + 0.12), withAlpha('#FFFFFF', 0.55));
+    gradient.addColorStop(1, withAlpha(color, 0.18));
+    return gradient;
+};
+
+const drawTrailCell = (
+    ctx: CanvasRenderingContext2D,
+    move: PlayerMove,
+    color: string,
+    cellSize: number
+) => {
+    const x = move.x * cellSize;
+    const y = move.y * cellSize;
+
+    ctx.clearRect(x, y, cellSize, cellSize);
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = cellSize * 0.28;
+    ctx.fillStyle = withAlpha(color, 0.34);
+    ctx.fillRect(x, y, cellSize, cellSize);
+    ctx.restore();
+};
+
+const drawTrailProgress = (
+    ctx: CanvasRenderingContext2D,
+    move: PlayerMove,
+    color: string,
+    cellSize: number,
+    progress: number
+) => {
+    const x = move.x * cellSize;
+    const y = move.y * cellSize;
+    const clippedSize = cellSize * progress;
+
+    ctx.clearRect(x, y, cellSize, cellSize);
+    ctx.save();
+    ctx.beginPath();
+    switch (move.direction) {
+        case 'left':
+            ctx.rect(x + cellSize - clippedSize, y, clippedSize, cellSize);
+            break;
+        case 'right':
+            ctx.rect(x, y, clippedSize, cellSize);
+            break;
+        case 'up':
+            ctx.rect(x, y + cellSize - clippedSize, cellSize, clippedSize);
+            break;
+        case 'down':
+            ctx.rect(x, y, cellSize, clippedSize);
+            break;
+    }
+    ctx.clip();
+    drawTrailCell(ctx, move, color, cellSize);
+    ctx.restore();
+};
+
+const drawPlayerHead = (
+    ctx: CanvasRenderingContext2D,
+    move: PlayerMove,
+    color: string,
+    cellSize: number
+) => {
+    const x = move.x * cellSize;
+    const y = move.y * cellSize;
+    const pad = Math.max(3, cellSize * 0.16);
+    const centerX = x + cellSize / 2;
+    const centerY = y + cellSize / 2;
+
+    const points: [number, number][] = (() => {
+        switch (move.direction) {
+            case 'left':
+                return [[x + pad, centerY], [x + cellSize - pad, y + pad], [x + cellSize - pad, y + cellSize - pad]];
+            case 'right':
+                return [[x + cellSize - pad, centerY], [x + pad, y + pad], [x + pad, y + cellSize - pad]];
+            case 'up':
+                return [[centerX, y + pad], [x + pad, y + cellSize - pad], [x + cellSize - pad, y + cellSize - pad]];
+            case 'down':
+                return [[centerX, y + cellSize - pad], [x + pad, y + pad], [x + cellSize - pad, y + pad]];
+        }
+    })();
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = cellSize * 0.35;
+    ctx.fillStyle = createDirectionalGradient(ctx, x, y, cellSize, move.direction, color);
+    ctx.strokeStyle = withAlpha('#FFFFFF', 0.78);
+    ctx.lineWidth = Math.max(1.5, cellSize * 0.055);
+    ctx.beginPath();
+    points.forEach(([pointX, pointY], index) => {
+        if (index === 0) {
+            ctx.moveTo(pointX, pointY);
+        } else {
+            ctx.lineTo(pointX, pointY);
+        }
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = withAlpha('#FFFFFF', 0.82);
+    ctx.beginPath();
+    ctx.arc(points[0][0], points[0][1], Math.max(2, cellSize * 0.055), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+};
+
 const GameBoard2: React.FC = () => {
     const {
         gameGrid,
@@ -316,7 +454,7 @@ const GameBoard2: React.FC = () => {
         }
     }, [players, gridSize, cellSize, boardWidth]);
 
-    const drawnPositionsRef = useRef(new Set<string>());
+    const drawnPositionsRef = useRef(new Map<string, PlayerMove>());
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -325,52 +463,55 @@ const GameBoard2: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const drawWithGlow = (x: number, y: number, width: number, height: number, color: string) => {
-            if (!ctx) return;
-
-            // Clear the area first to prevent additive glowing
-            ctx.clearRect(x, y, width, height);
-
-            // Single pass with consistent glow
-            ctx.save();
-            // ctx.shadowColor = color;
-            // ctx.shadowBlur = 15;
-            // ctx.shadowOffsetX = 0;
-            // ctx.shadowOffsetY = 0;
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, width, height);
-            ctx.restore();
+        const redrawStoredTrails = () => {
+            drawnPositionsRef.current.forEach((storedMove) => {
+                const player = players.find(p => p.id === storedMove.player_id);
+                if (player) {
+                    drawTrailCell(ctx, storedMove, player.color, cellSize);
+                }
+            });
         };
-        // First, redraw all previously drawn positions
-        drawnPositionsRef.current.forEach(posKey => {
-            const [x, y, playerId] = posKey.split(',');
-            const player = players.find(p => p.id === parseInt(playerId));
-            if (player) {
-                drawWithGlow(
-                    parseInt(x) * cellSize,
-                    parseInt(y) * cellSize,
-                    cellSize,
-                    cellSize,
-                    player.color
-                );
+
+        redrawStoredTrails();
+
+        const drawLiveHeads = () => {
+            playerPositions.forEach(position => {
+                const player = players.find(p => p.id === position.player_id);
+                if (player) {
+                    drawPlayerHead(ctx, position, player.color, cellSize);
+                }
+            });
+        };
+
+        const newPositionKeys = new Set<string>();
+        playerPositions.forEach(position => {
+            const posKey = `${position.x},${position.y},${position.player_id}`;
+            const player = players.find(p => p.id === position.player_id);
+            if (player && !drawnPositionsRef.current.has(posKey)) {
+                newPositionKeys.add(posKey);
             }
         });
 
-        // Then animate new positions
+        if (isStepThroughMode) {
+            playerPositions.forEach(position => {
+                const posKey = `${position.x},${position.y},${position.player_id}`;
+                drawnPositionsRef.current.set(posKey, position);
+            });
+        }
+
         playerPositions.forEach(position => {
             const posKey = `${position.x},${position.y},${position.player_id}`;
-            if (drawnPositionsRef.current.has(posKey)) return;
-
             const player = players.find(p => p.id === position.player_id);
             if (!player) return;
 
-            ctx.fillStyle = player.color;
-            const startX = position.x * cellSize;
-            const startY = position.y * cellSize;
-
             if (isStepThroughMode) {
-                drawWithGlow(startX, startY, cellSize, cellSize, player.color);
-                drawnPositionsRef.current.add(posKey);
+                drawTrailCell(ctx, position, player.color, cellSize);
+                drawPlayerHead(ctx, position, player.color, cellSize);
+                return;
+            }
+
+            if (!newPositionKeys.has(posKey)) {
+                drawPlayerHead(ctx, position, player.color, cellSize);
                 return;
             }
 
@@ -380,81 +521,32 @@ const GameBoard2: React.FC = () => {
                 const startTime = performance.now();
 
                 const drawFrame = (currentTime: number) => {
-                    // Redraw all previous positions first
-                    ctx.clearRect(startX, startY, cellSize, cellSize);
-
-                    // Redraw all previous positions
-                    drawnPositionsRef.current.forEach(posKey => {
-                        const [x, y, playerId] = posKey.split(',');
-                        const player = players.find(p => p.id === parseInt(playerId));
-                        if (player) {
-                            drawWithGlow(
-                                parseInt(x) * cellSize,
-                                parseInt(y) * cellSize,
-                                cellSize,
-                                cellSize,
-                                player.color
-                            );
-                        }
-                    });
+                    redrawStoredTrails();
 
                     progress = (currentTime - startTime) / animationDuration;
                     if (progress >= 1) {
-                        drawWithGlow(startX, startY, cellSize, cellSize, player.color);
-                        drawnPositionsRef.current.add(posKey);
+                        drawnPositionsRef.current.set(posKey, position);
+                        drawTrailCell(ctx, position, player.color, cellSize);
+                        drawLiveHeads();
                         return;
                     }
 
-                    ctx.fillStyle = player.color;
-                    switch (position.direction) {
-                        case 'left':
-                            drawWithGlow(
-                                startX + cellSize * (1 - progress),
-                                startY,
-                                cellSize * progress,
-                                cellSize,
-                                player.color
-                            );
-                            break;
-                        case 'right':
-                            drawWithGlow(
-                                startX,
-                                startY,
-                                cellSize * progress,
-                                cellSize,
-                                player.color
-                            );
-                            break;
-                        case 'up':
-                            drawWithGlow(
-                                startX,
-                                startY + cellSize * (1 - progress),
-                                cellSize,
-                                cellSize * progress,
-                                player.color
-                            );
-                            break;
-                        case 'down':
-                            drawWithGlow(
-                                startX,
-                                startY,
-                                cellSize,
-                                cellSize * progress,
-                                player.color
-                            );
-                            break;
-                    }
+                    drawTrailProgress(ctx, position, player.color, cellSize, progress);
                     requestAnimationFrame(drawFrame);
                 };
                 requestAnimationFrame(drawFrame);
             };
             animate();
         });
+
+        if (isStepThroughMode || newPositionKeys.size === 0) {
+            drawLiveHeads();
+        }
     }, [playerPositions, players, cellSize, isStepThroughMode, trailAnimationDuration]);
 
     useEffect(() => {
         let isMounted = true;
-        drawnPositionsRef.current = new Set();
+        drawnPositionsRef.current = new Map();
         setPlayerPositions([]);
 
         if (isMounted) {
@@ -470,7 +562,7 @@ const GameBoard2: React.FC = () => {
     const handleGameStart = () => {
         if (!canStartGame) return;
 
-        drawnPositionsRef.current = new Set();
+        drawnPositionsRef.current = new Map();
         let resetPlayers = startGame();
         initializePlayerSquares(resetPlayers);
     }

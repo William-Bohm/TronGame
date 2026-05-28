@@ -33,6 +33,12 @@ export const getGameTickDelay = (speed: number) => {
     return Math.round(SLOWEST_TICK_DELAY_MS - speedProgress * (SLOWEST_TICK_DELAY_MS - FASTEST_TICK_DELAY_MS));
 };
 
+const isOppositeDirection = (currentDirection: Direction, nextDirection: Direction) =>
+    (currentDirection === 'up' && nextDirection === 'down') ||
+    (currentDirection === 'down' && nextDirection === 'up') ||
+    (currentDirection === 'left' && nextDirection === 'right') ||
+    (currentDirection === 'right' && nextDirection === 'left');
+
 export type GameStatus = 'waiting' | 'playing' | 'gameOver';
 
 export interface PlayerMove {
@@ -311,12 +317,7 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
 
     const changePlayerDirection = (playerId: number, direction: Direction) => {
         let player = players.find(player => player.id === playerId);
-        if (
-            (player?.direction === 'up' && direction === 'down') ||
-            (player?.direction === 'down' && direction === 'up') ||
-            (player?.direction === 'left' && direction === 'right') ||
-            (player?.direction === 'right' && direction === 'left')
-        ) {
+        if (player && hasPlayerMoved(player.id) && isOppositeDirection(player.direction, direction)) {
             return;
         }
 
@@ -345,6 +346,9 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
             setModelInitialized(false);
         }
     };
+
+    const hasPlayerMoved = (playerId: number) =>
+        gameGrid.reduce((total, row) => total + row.filter(cell => cell === playerId).length, 0) > 1;
 
     const isGameOver = (newPlayers: Player[]): { gameOver: boolean; winner: number | null } => {
         const alivePlayers = newPlayers.filter(player => player.alive);
@@ -431,16 +435,12 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
         // Update players' directions from desiredDirections
         const newPlayers = players.map(player => {
             const desiredDirection = desiredDirections.current[player.id];
+            const canReverseDirection = !hasPlayerMoved(player.id);
 
             if (
                 desiredDirection &&
                 player.direction !== desiredDirection &&
-                !(
-                    (player.direction === 'up' && desiredDirection === 'down') ||
-                    (player.direction === 'down' && desiredDirection === 'up') ||
-                    (player.direction === 'left' && desiredDirection === 'right') ||
-                    (player.direction === 'right' && desiredDirection === 'left')
-                )
+                (canReverseDirection || !isOppositeDirection(player.direction, desiredDirection))
             ) {
                 player.direction = desiredDirection;
             }
