@@ -1,7 +1,7 @@
 import React, {useRef, useEffect, useState, useCallback} from 'react';
 import styled, {keyframes} from 'styled-components';
 import {useNavigate} from "react-router-dom";
-import {Player, PlayerMove, useTronContext} from "../../context/GameContext";
+import {getGameTickDelay, isStepThroughSpeed, Player, PlayerMove, useTronContext} from "../../context/GameContext";
 import {rgba} from "polished";
 import {SciFiButton} from "./backToSettingsButton";
 import {LeftPlayerScoreComponent, PlayerScoreComponents} from "../SciFiComponents/PlayerScoreComponents";
@@ -179,6 +179,7 @@ const GameBoard2: React.FC = () => {
         winner,
         desiredDirections,
         controlSchemeMappings,
+        gameLoop,
 
     } = useTronContext();
     const {
@@ -213,6 +214,13 @@ const GameBoard2: React.FC = () => {
     const bottomRightPlayers = players.slice(midpoint + quarterPoint);
     const [spaceTakenUpByPlayerScoresHorizontal, setSpaceTakenUpByPlayerScoresHorizontal] = useState(0);
     const [spaceTakenUpByPlayerScoresVertical, setSpaceTakenUpByPlayerScoresVertical] = useState(0);
+    const isStepThroughMode = isStepThroughSpeed(gameSpeed);
+    const isStepThroughModePlayable =
+        players.length === 2 &&
+        players.filter(player => player.type === 'human').length === 1 &&
+        players.filter(player => player.type === 'bot').length === 1;
+    const canStartGame = !isStepThroughMode || isStepThroughModePlayable;
+    const trailAnimationDuration = getGameTickDelay(gameSpeed);
 
     useEffect(() => {
         const calculateScoreSpace = () => {
@@ -360,9 +368,15 @@ const GameBoard2: React.FC = () => {
             const startX = position.x * cellSize;
             const startY = position.y * cellSize;
 
+            if (isStepThroughMode) {
+                drawWithGlow(startX, startY, cellSize, cellSize, player.color);
+                drawnPositionsRef.current.add(posKey);
+                return;
+            }
+
             const animate = () => {
                 let progress = 0;
-                const animationDuration = gameSpeed;
+                const animationDuration = trailAnimationDuration;
                 const startTime = performance.now();
 
                 const drawFrame = (currentTime: number) => {
@@ -436,7 +450,7 @@ const GameBoard2: React.FC = () => {
             };
             animate();
         });
-    }, [playerPositions, players, cellSize]);
+    }, [playerPositions, players, cellSize, isStepThroughMode, trailAnimationDuration]);
 
     useEffect(() => {
         let isMounted = true;
@@ -454,18 +468,19 @@ const GameBoard2: React.FC = () => {
     }, [])
 
     const handleGameStart = () => {
+        if (!canStartGame) return;
+
         drawnPositionsRef.current = new Set();
         let resetPlayers = startGame();
         initializePlayerSquares(resetPlayers);
     }
 
-    // Reset drawn positions when game resets
-    useEffect(() => {
-        drawnPositionsRef.current = new Set();
-    }, [gameStatus]);
-
     // handle key press's
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
+        if (isStepThroughMode && event.repeat) {
+            return;
+        }
+
         // if space bar then start
         if (gameStatus !== 'playing') {
             if (event.key === ' ') {
@@ -473,16 +488,23 @@ const GameBoard2: React.FC = () => {
             }
             return;
         }
+        let handledHumanInput = false;
+
         players.forEach((player: Player) => {
             if (player.type === 'human') {
                 // Use optional chaining to safely access nested properties
                 const direction = controlSchemeMappings[player.controlScheme!]?.[event.key];
                 if (direction) {
                     desiredDirections.current[player.id] = direction;
+                    handledHumanInput = true;
                 }
             }
         });
-    }, [gameStatus, players]);
+
+        if (isStepThroughMode && handledHumanInput) {
+            gameLoop();
+        }
+    }, [gameStatus, players, controlSchemeMappings, desiredDirections, isStepThroughMode, gameLoop, handleGameStart]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyPress);
@@ -543,7 +565,12 @@ const GameBoard2: React.FC = () => {
                     <Overlay onClick={handleGameStart}
                              onTouchStart={handleGameStart}>
                         <TypedTitle fontSize={'small'}>
-                            Press space to start...
+                            {isStepThroughMode && !isStepThroughModePlayable
+                                ? "Step needs 1 human + 1 bot"
+                                : isStepThroughMode
+                                    ? "Press space to start step mode..."
+                                    : "Press space to start..."
+                            }
                         </TypedTitle>
                     </Overlay>
                 )}
