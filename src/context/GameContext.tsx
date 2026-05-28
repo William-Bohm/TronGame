@@ -17,6 +17,22 @@ export type Direction = 'up' | 'down' | 'left' | 'right';
  */
 const directions: Direction[] = ['up', 'down', 'left', 'right'];
 
+export const STEP_THROUGH_SPEED = 0;
+export const MIN_GAME_SPEED = 1;
+export const MAX_GAME_SPEED = 10;
+export const DEFAULT_GAME_SPEED = STEP_THROUGH_SPEED;
+
+const SLOWEST_TICK_DELAY_MS = 1000;
+const FASTEST_TICK_DELAY_MS = 100;
+
+export const isStepThroughSpeed = (speed: number) => speed === STEP_THROUGH_SPEED;
+
+export const getGameTickDelay = (speed: number) => {
+    const clampedSpeed = Math.max(MIN_GAME_SPEED, Math.min(MAX_GAME_SPEED, Math.round(speed)));
+    const speedProgress = (clampedSpeed - MIN_GAME_SPEED) / (MAX_GAME_SPEED - MIN_GAME_SPEED);
+    return Math.round(SLOWEST_TICK_DELAY_MS - speedProgress * (SLOWEST_TICK_DELAY_MS - FASTEST_TICK_DELAY_MS));
+};
+
 export type GameStatus = 'waiting' | 'playing' | 'gameOver';
 
 export interface PlayerMove {
@@ -108,10 +124,13 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
     const [gameStatus, setGameStatus] = useState<GameStatus>('waiting');
     const isGameRunning = useRef(false);
     const [winner, setWinner] = useState<number | null>(null);
-    const [gameSpeed, setGameSpeed] = useState(500);
+    const [gameSpeed, setGameSpeedState] = useState(DEFAULT_GAME_SPEED);
+    const setGameSpeed = (speed: number) => {
+        setGameSpeedState(Math.max(STEP_THROUGH_SPEED, Math.min(MAX_GAME_SPEED, Math.round(speed))));
+    };
     const [modelInitialized, setModelInitialized] = useState(false);
     const [availableControlSchemes, setAvailableControlSchemes] = useState<ControlScheme[]>([
-        'yghj', 'ijkl', "pl;'", 'numpad', 'bot'
+        'yghj', 'arrows', 'ijkl', "pl;'", 'numpad', 'bot'
     ]);
     const allControlSchemes = ['wasd', 'yghj', 'arrows', 'ijkl', "pl;'", 'numpad', 'bot'] as const;
     const controlSchemeMappings: ControlSchemesMapping = {
@@ -167,11 +186,11 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
             },
             {
                 id: 2,
-                type: 'human',
+                type: 'bot',
                 name: 'Player 2',
                 position: [9, 5],
                 direction: 'right',
-                controlScheme: 'arrows',
+                controlScheme: 'bot',
                 color: '#FFA300',
                 score: 0,
             }
@@ -209,29 +228,57 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
             return players;
         }
 
-        const perimeterSlots: { position: Position; direction: Direction }[] = [];
-
-        for (let x = 0; x < width - 1; x++) {
-            perimeterSlots.push({ position: [x, 0], direction: 'right' });
-        }
-        for (let y = 0; y < height - 1; y++) {
-            perimeterSlots.push({ position: [width - 1, y], direction: 'down' });
-        }
-        for (let x = width - 1; x > 0; x--) {
-            perimeterSlots.push({ position: [x, height - 1], direction: 'left' });
-        }
-        for (let y = height - 1; y > 0; y--) {
-            perimeterSlots.push({ position: [0, y], direction: 'up' });
+        const availablePositions: Position[] = [];
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                availablePositions.push([x, y]);
+            }
         }
 
-        return players.map((player, index) => {
-            const slotIndex = Math.floor((index * perimeterSlots.length) / playerCount) % perimeterSlots.length;
-            const slot = perimeterSlots[slotIndex];
+        for (let i = availablePositions.length - 1; i > 0; i--) {
+            const randomIndex = Math.floor(Math.random() * (i + 1));
+            [availablePositions[i], availablePositions[randomIndex]] = [availablePositions[randomIndex], availablePositions[i]];
+        }
+
+        const occupiedPositions = new Set<string>();
+        const playersWithPositions = players.map((player, index) => {
+            const position = availablePositions[index % availablePositions.length];
+            occupiedPositions.add(`${position[0]},${position[1]}`);
 
             return {
                 ...player,
-                position: slot.position,
-                direction: slot.direction,
+                position,
+            };
+        });
+
+        const getNextPosition = ([x, y]: Position, direction: Direction): Position => {
+            switch (direction) {
+                case 'up':
+                    return [x, y - 1];
+                case 'down':
+                    return [x, y + 1];
+                case 'left':
+                    return [x - 1, y];
+                case 'right':
+                    return [x + 1, y];
+            }
+        };
+
+        const isInBounds = ([x, y]: Position) =>
+            x >= 0 && x < width && y >= 0 && y < height;
+
+        return playersWithPositions.map((player) => {
+            const clearDirections = directions.filter(direction => {
+                const nextPosition = getNextPosition(player.position, direction);
+                return isInBounds(nextPosition) && !occupiedPositions.has(`${nextPosition[0]},${nextPosition[1]}`);
+            });
+            const inBoundsDirections = directions.filter(direction => isInBounds(getNextPosition(player.position, direction)));
+            const possibleDirections = clearDirections.length > 0 ? clearDirections : inBoundsDirections;
+            const direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+            return {
+                ...player,
+                direction,
             };
         });
     }
@@ -495,14 +542,16 @@ export const TronProvider: React.FC<TronProviderProps> = ({ children }) => {
 
     useEffect(() => {
         let timeoutId: number;
+        const isStepThroughMode = isStepThroughSpeed(gameSpeed);
+        const tickDelay = getGameTickDelay(gameSpeed);
 
         const loop = () => {
             gameLoop();
-            timeoutId = window.setTimeout(loop, gameSpeed);
+            timeoutId = window.setTimeout(loop, tickDelay);
         };
 
-        if (gameStatus === 'playing') {
-            timeoutId = window.setTimeout(loop, gameSpeed);
+        if (gameStatus === 'playing' && !isStepThroughMode) {
+            timeoutId = window.setTimeout(loop, tickDelay);
         }
 
         return () => {

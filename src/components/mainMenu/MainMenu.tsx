@@ -373,7 +373,7 @@ const MainMenu: React.FC<MainMenuProps> = ({directToMenu = false}) => {
     const instructions = [
         "Leave trails of light as you move - crash into any line or wall and you're out!",
         "Choose your controls or activate Bot mode in the Player Selector.",
-        "Speed: 1 = Fastest, 999 = Slowest.",
+        "Speed: 1 = Slowest, 10 = Fastest. 0 = STEP with 1 human and 1 bot.",
         "Last survivor wins. Good luck!"
     ].filter(Boolean);
 

@@ -2,7 +2,7 @@ import React, {useState, useRef, useEffect} from 'react';
 import styled, {keyframes} from 'styled-components';
 import {cssFormatColors, toRGBA} from "../../threeJSMeterials";
 import {slideDown} from "./SciFiSlideDownAnimation";
-import {useTronContext} from "../../context/GameContext";
+import {MAX_GAME_SPEED, STEP_THROUGH_SPEED} from "../../context/GameContext";
 
 
 interface CircleSliderProps {
@@ -223,9 +223,11 @@ const MarkerValue = styled.div`
     user-select: none;
 `;
 
+const DIAL_SPAN_DEGREES = 330;
+
 export const CircleSlider: React.FC<CircleSliderProps> = ({
-                                                              min = 1,
-                                                              max = 1000,
+                                                              min = STEP_THROUGH_SPEED,
+                                                              max = MAX_GAME_SPEED,
                                                               value,
                                                               onChange,
     directToMenu
@@ -234,11 +236,6 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
     const [isDragging, setIsDragging] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-
-    const {
-        setGameSpeed
-    } = useTronContext();
-
     const handleMouseDown = () => {
         setIsDragging(true);
     };
@@ -246,37 +243,6 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
     const handleMouseUp = () => {
         setIsDragging(false);
     };
-
-    useEffect(() => {
-        let startTime: number;
-        let duration: number;
-        if (directToMenu) {
-            duration = 1500;
-        } else {
-            duration = 2000;
-        }
-         // 2 seconds in milliseconds
-        const startValue = 0;
-        const targetValue = value;
-
-        const animate = (currentTime: number) => {
-            if (!startTime) startTime = currentTime;
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            // Use easing function for smoother animation (optional)
-            const eased = -Math.cos(progress * Math.PI) / 2 + 0.5;
-            const currentValue = startValue + (targetValue - startValue) * eased;
-
-            onChange(Math.round(currentValue));
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            }
-        };
-
-        requestAnimationFrame(animate);
-    }, []);
 
     const calculateAngle = (clientX: number, clientY: number) => {
         if (!containerRef.current) return 0;
@@ -295,16 +261,30 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
         degrees = degrees + 90; // Rotate by 90 degrees to match your layout
         if (degrees < 0) degrees += 360;
 
-        // Normalize to 0-1 range
-        return degrees / 360;
+        return degrees;
     };
+
+    const getAngleForValue = (speed: number) => {
+        const speedProgress = (speed - min) / (max - min);
+        return speedProgress * DIAL_SPAN_DEGREES;
+    };
+
+    const getValueFromAngle = (degrees: number) => {
+        const values = Array.from({length: max - min + 1}, (_, index) => min + index);
+        return values.reduce((nearestValue, currentValue) => {
+            const nearestDistance = Math.abs(((degrees - getAngleForValue(nearestValue) + 540) % 360) - 180);
+            const currentDistance = Math.abs(((degrees - getAngleForValue(currentValue) + 540) % 360) - 180);
+            return currentDistance < nearestDistance ? currentValue : nearestValue;
+        });
+    };
+
+    const clampValue = (newValue: number) =>
+        Math.max(min, Math.min(max, Math.round(newValue)));
 
     const handleMouseMove = (e: MouseEvent) => {
         if (!isDragging) return;
 
-        const progress = calculateAngle(e.clientX, e.clientY);
-        const newValue = Math.round(progress * (max - min) + min);
-        onChange(Math.max(min, Math.min(max, newValue)));
+        onChange(getValueFromAngle(calculateAngle(e.clientX, e.clientY)));
     };
 
     useEffect(() => {
@@ -317,14 +297,12 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
         };
     }, [isDragging, min, max, onChange]); // Added missing dependencies
 
-    const progress = (value - min) / (max - min);
-    const angle = progress * 360;
+    const angle = getAngleForValue(value);
+    const progress = angle / 360;
 
     const handleValueChange = (newValue: number) => {
-    if (newValue < 1) setGameSpeed(1);
-    else if (newValue >= 1000) setGameSpeed(999);
-    else setGameSpeed(newValue);
-};
+        onChange(clampValue(newValue));
+    };
 
 
     return (
@@ -349,21 +327,12 @@ export const CircleSlider: React.FC<CircleSliderProps> = ({
                     />
                 ) : (
                     <Value onClick={() => setIsEditing(true)}>
-                        {value}
+                        {value === STEP_THROUGH_SPEED ? 'STEP' : value}
                     </Value>
-                )} {[
-                {value: 0, angle: 0},
-                {value: 125, angle: 45},
-                {value: 250, angle: 90},
-                {value: 375, angle: 135},
-                // {value: 500, angle: 180},
-                {value: 625, angle: 225},
-                {value: 750, angle: 270},
-                {value: 875, angle: 315}
-            ].map(({value, angle}) => (
-                <React.Fragment key={value}>
-                    <Marker $angle={angle}>
-                        <MarkerValue>{value}</MarkerValue>
+                )} {Array.from({length: max - min + 1}, (_, index) => min + index).map((markerValue) => (
+                <React.Fragment key={markerValue}>
+                    <Marker $angle={getAngleForValue(markerValue)}>
+                        <MarkerValue>{markerValue === STEP_THROUGH_SPEED ? 'STEP' : markerValue}</MarkerValue>
                     </Marker>
                 </React.Fragment>
             ))}
